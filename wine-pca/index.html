@@ -1,0 +1,707 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="From foundations to a confident presentation — 中英结合，推导、练习与逐步解释"><title>把 Wine PCA 真正讲明白 · PCA Study Room</title><link rel="stylesheet" href="assets/site.css"></head><body data-book="wine-pca"><aside id="sidebar"><button class="mobile" id="close-nav">关闭目录 / Close</button><div class="eyebrow">THE PCA STUDY ROOM</div><div class="brand">把 Wine PCA 真正讲明白</div><small>From foundations to a confident presentation</small><p class="small"><a href="../">全部教材 / All books</a></p><progress id="progress" value="0" max="19"></progress><small id="progress-text"></small><input id="search" class="search" type="search" aria-label="搜索章节全文" placeholder="找概念 / Search chapters"> <nav aria-label="章节目录"><a href="#start">01 · 这次到底要讲清楚什么？<span class="nav-en">The question behind the presentation</span></a><a href="#data">02 · 一瓶酒为什么是一个十三维的点？<span class="nav-en">Observations, variables and a data matrix</span></a><a href="#variance">03 · 均值、方差、标准差：先亲手算一遍<span class="nav-en">Mean, variance and standard deviation</span></a><a href="#preprocess">04 · 中心化与标准化，分别改了什么？<span class="nav-en">Centring and standardising are different operations</span></a><a href="#covariance">05 · 两列怎样一起变化？<span class="nav-en">Covariance, correlation and the matrix C</span></a><a href="#projection">06 · 投影：十三个数怎样变成一个数？<span class="nav-en">Projection, directions and scores</span></a><a href="#eigen">07 · 最大方差为什么变成特征值问题？<span class="nav-en">From maximum variance to eigenvectors</span></a><a href="#svd">08 · SVD、载荷、得分和重建<span class="nav-en">SVD, loadings, scores and reconstruction</span></a><a href="#percent">09 · 99.98% 和 55.41% 的分母不同<span class="nav-en">Explained variance: read the denominator</span></a><a href="#windows">10 · Windows：从安装到第一次运行<span class="nav-en">Windows: install, create a script, and run a line</span></a><a href="#import">11 · 自己写导入代码：先让数据正确进来<span class="nav-en">Import the Wine data yourself</span></a><a href="#rfit">12 · 两次 PCA：每行到底在干什么？<span class="nav-en">Fit both PCA models and inspect the objects</span></a><a href="#plots">13 · 自己画图，再读懂一个点<span class="nav-en">Draw the scores and explain every visual element</span></a><a href="#slide1">14 · 第一页：每一块内容怎样支撑论点？<span class="nav-en">Slide 1: the question, mechanism and controlled comparison</span></a><a href="#slide2">15 · 第二页：从证据走到有边界的结论<span class="nav-en">Slide 2: results, interpretation and a justified choice</span></a><a href="#speech">16 · 三分钟讲稿：逐段对着 PPT 讲<span class="nav-en">A three-minute script, with pointing and meaning</span></a><a href="#qa">17 · 分层问答：先短答，再解释为什么<span class="nav-en">Questions: a short spoken answer, then the reasoning</span></a><a href="#practice">18 · 最后用题目检验：真的能独立讲了吗？<span class="nav-en">Practice problems and a teach-back test</span></a><a href="#sources">19 · 术语、资料与复习索引<span class="nav-en">Glossary, sources and what was verified</span></a></nav><p class="small">个人学习资料 · 非大学官方课程网站<br>Private study resource, not an official university site.<br><a href="wine-pca-offline.zip" download>下载离线教材 ZIP / Offline book</a><br><a href="wine-pca-notes.pdf">阅读版 PDF / PDF notes</a></p></aside><div class="workspace"><header class="toolbar"><button id="menu" class="mobile" aria-expanded="false" aria-controls="sidebar">目录 / Contents</button><span id="position" class="small desktop"></span><select id="language" aria-label="解释语言"><option value="both">中英对照 / Bilingual</option><option value="zh">中文为主 / Chinese focus</option></select><button id="font" aria-pressed="false">大字 / Larger</button><button id="all" aria-pressed="false">连续阅读 / Read all</button><button id="print">打印全部 / Print all</button></header><main><noscript><div class="nojs">JavaScript 未开启，正文仍可阅读；互动和进度需要 JavaScript。All chapters remain readable below.</div></noscript><section class="chapter" id="start"><div class="eyebrow">WINE-PCA / 01</div><h1>这次到底要讲清楚什么？<span>The question behind the presentation</span></h1><div class="lead">Wine PCA: is a higher explained variance always better?<br/>葡萄酒 PCA：解释方差百分比更高，就一定更好吗？</div>
+<p>你面对的任务是一个真实数据分析汇报。用同一批葡萄酒，比较<strong>中心化但不标准化</strong>与<strong>中心化并标准化</strong>两种 PCA。你需要用数学、结果和分析目的解释自己的选择。这本教材对应两页 PPT 和约三分钟的英文讲稿；它不是某篇 Wine 论文的逐段翻译。</p>
+<p class="en">This is a real-data investigation. We compare two PCA analyses of the same wines, changing only whether the variables are standardised. The aim is to explain a methodological choice using mathematics and evidence.</p>
+<h3>先记住一条主线 / One connected argument</h3>
+<p><strong>变量尺度不同 → 方差权重不同 → PCA 方向改变 → 图和百分比改变 → 根据研究目的作选择。</strong></p>
+<p>这不是“55% 神奇地胜过 100%”。两种处理定义了不同的度量：原始 PCA 重视原单位下的大变化；标准化 PCA 重视相对各自标准差的变化。比较前先说清楚自己想保留哪种差异。</p>
+<p class="en">The two percentages refer to different geometries. Raw PCA preserves variation measured in the original scales. Standardised PCA preserves variation measured in standard-deviation units.</p>
+<h3>建议的学习路线 / A workable route</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>做什么</th>
+<th>离开前要能完成</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一轮：基础</td>
+<td>第 1–7 节，分两次读</td>
+<td>手算均值、方差、投影；解释最大方差为什么给出特征向量</td>
+</tr>
+<tr>
+<td>第二轮：实操</td>
+<td>Windows 操作与 R 小段练习</td>
+<td>自己新建脚本，从数据重做两种 PCA</td>
+</tr>
+<tr>
+<td>第三轮：证据</td>
+<td>读实际图、数值表、PPT</td>
+<td>指着一个点、一项载荷、一个百分比解释含义</td>
+</tr>
+<tr>
+<td>第四轮：开口</td>
+<td>逐段讲稿、分层问答、综合练习</td>
+<td>不看答案讲三分钟，再回答“为什么”</td>
+</tr>
+</tbody>
+</table></div>
+<p>每节先读中文解释，再读对应英文。遇到“先预测”就停下来写答案，再点展开。完成标记只记录你自己勾选的进度；<strong>能独立做题和解释，才是掌握的证据</strong>。</p>
+<div class="callout">浏览器负责阅读和交互；RStudio 负责运行 R。页面里的“复制这一小段 R”只复制当前练习。网页文件不是 R 程序。<br/><span class="en">Read here; run R in RStudio. A webpage is not an R script.</span></div>
+<p>已经会安装软件的读者可以跳到 <a href="#import">数据导入</a>。完全没用过 R 的读者先读基础，再按 <a href="#windows">Windows 操作</a>逐步做。旧课的完整截图教材也保留在 <a href="../lesson3/">PCA 第三课</a>。</p>
+</section><section class="chapter" id="data"><div class="eyebrow">WINE-PCA / 02</div><h1>一瓶酒为什么是一个十三维的点？<span>Observations, variables and a data matrix</span></h1><p>UCI Wine 数据有 <strong>178 瓶酒、13 项连续化学测量、3 个葡萄品种标签</strong>。每行是一瓶酒，每列是一项测量；原始文件还有第一列品种，所以读取后是 178 × 14。去掉第一列后，PCA 的输入 X 才是 178 × 13。</p>
+<p class="en">An observation is one wine; a variable is one chemical measurement. The cultivar is a group label. It is kept for colouring the plot and excluded from the PCA input.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>对象</th>
+<th>符号与大小</th>
+<th>在这里的含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据矩阵 / data matrix</td>
+<td>X：178 × 13</td>
+<td>178 行酒，13 列化学测量</td>
+</tr>
+<tr>
+<td>一行 / one observation</td>
+<td>xᵢ：13 个数</td>
+<td>第 i 瓶酒的测量组合</td>
+</tr>
+<tr>
+<td>一个方向 / direction</td>
+<td>w：13 × 1</td>
+<td>给 13 列分配的方向系数</td>
+</tr>
+<tr>
+<td>一列新坐标 / score vector</td>
+<td>t = Xc w：178 × 1</td>
+<td>每瓶酒在同一新方向上的一个坐标</td>
+</tr>
+<tr>
+<td>两列新坐标</td>
+<td>T₂：178 × 2</td>
+<td>能画在二维纸上的坐标</td>
+</tr>
+</tbody>
+</table></div>
+<p>先想二维：只量 Alcohol 和 Proline，一瓶酒是 (Alcohol, Proline) 一个点。再加 Hue，这个点就有第三个坐标。十三维只是继续加坐标；你不需要在脑中画十三条轴，矩阵运算仍然有明确意义。</p>
+<p class="en">A high-dimensional point is simply a list of measurements. PCA constructs new coordinates as weighted sums of those measurements; it does not require us to visualise thirteen perpendicular axes.</p>
+<p>这 13 列按文件顺序是 Alcohol、Malic acid、Ash、Alcalinity of ash、Magnesium、Total phenols、Flavanoids、Nonflavanoid phenols、Proanthocyanins、Color intensity、Hue、OD280/OD315、Proline。Flavanoids 保留 UCI 文件的拼写。原说明未完整列出所有测量单位，本教材不凭空给它们加单位。</p>
+<h3>为什么不能把品种 1、2、3 也放进 X？</h3>
+<p>这些数字编码类别，不代表品种 3 是品种 1 的三倍，也不代表品种间有等距关系。加进去会让 PCA 利用你后来拿来“解释分组”的标签，改变研究问题。我们先只从化学测量找方向，之后才用标签查看这些方向与品种的关系。</p>
+<p class="en">The numbers 1, 2 and 3 are category codes, not quantitative measurements. PCA is fitted without these labels; colours are added afterwards.</p>
+<p><details><summary>检查：把颜色全部去掉，PCA 坐标会变吗？ / Check</summary><p>不会。颜色只是绘图属性。只有改变输入测量、预处理或 PCA 设置，才可能改变坐标。The scores stay the same because the input matrix is unchanged.</p></details></p>
+</section><section class="chapter" id="variance"><div class="eyebrow">WINE-PCA / 03</div><h1>均值、方差、标准差：先亲手算一遍<span>Mean, variance and standard deviation</span></h1><p>用一个教学小例子：三次测量是 2、4、6。均值是 (2+4+6)/3=4。每个数减去均值得到 −2、0、2，这些是偏差。直接相加会抵消，所以平方后再加：4+0+4=8。样本方差用 n−1=2 作分母，得到 4；标准差是 √4=2。</p>
+<p class="en">Variance measures spread around the mean. Squaring prevents positive and negative deviations from cancelling. Standard deviation is the square root of variance and uses the original measurement unit.</p>
+<div class="mathbox"><img alt="\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i,\qquad s^2=\frac{1}{n-1}\sum_{i=1}^{n}(x_i-\bar{x})^2" src="assets/math-0a2d813d2f0c.svg" style="height:52.5px"/></div>
+<p><strong>n−1 为什么出现？</strong>估计了均值后，偏差的和必须是 0。如果知道前 n−1 个偏差，最后一个已被确定。在独立同分布且有限方差的抽样设定下，除以 n−1 使样本方差成为总体方差的无偏估计。PCA 本身不要求先证明数据服从正态分布。</p>
+<p class="en">Estimating the mean uses one degree of freedom. The n−1 convention gives an unbiased variance estimator under independent, identically distributed sampling. Normality is not needed to compute ordinary PCA.</p>
+<h3>把厘米改成米，会发生什么？</h3>
+<p>若 y = a x + b，则均值变成 a x̄+b，偏差变成 a(x−x̄)，方差变成 a²s²，标准差变成 |a|s。加同一个常数 b 不改变散布；乘 100 会把方差乘 10,000。数值尺度因此会影响最大方差的选择。</p>
+<div class="interactive" id="scale-lab"><h3>先预测，再改变单位 / Change the scale</h3><p>教学数据为 2、4、6。拖动倍数 a，观察原始方差与标准化后的值。</p><label>a = <output id="scale-a">1</output> <input id="scale-slider" max="100" min="1" type="range" value="1"/></label><div aria-live="polite" id="scale-results"></div></div>
+<h3>R 的第一次数学核对 / A small R check</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>a &lt;- c(2, 4, 6)
+mean(a)
+var(a)
+sd(a)
+</code></pre></div>
+<p><code>c</code> 把数字装成向量；<code>&lt;-</code> 是“把右边结果存到左边名字”。接下来的三个答案应是 4、4、2。每次运行一行，先预测答案。</p>
+<p><details><summary>练习：10、10、10 的方差是多少？还能标准化吗？</summary><p>方差 0，标准差也为 0。除以 0 不合法，因此用单位标准差缩放前应去掉常量列，或重新考虑变量定义。A constant variable cannot be scaled to unit variance.</p></details></p>
+</section><section class="chapter" id="preprocess"><div class="eyebrow">WINE-PCA / 04</div><h1>中心化与标准化，分别改了什么？<span>Centring and standardising are different operations</span></h1><p><strong>中心化 centring：每一列减去这一列的均值。</strong>三次测量 2、4、6 变成 −2、0、2。原来相差 2 的两点仍相差 2；我们只是把平均位置移到原点，方差不变。</p>
+<p><strong>标准化 standardising：中心化之后，再除以这一列的样本标准差。</strong>本例变成 −1、0、1，意思是“低于平均值一个标准差、等于平均值、高于平均值一个标准差”。</p>
+<p class="en">Centring changes the origin. Standardising also changes the unit of measurement: each coordinate is expressed in standard-deviation units.</p>
+<div class="mathbox"><img alt="x_{c,ij}=x_{ij}-\bar{x}_j,\qquad z_{ij}=\frac{x_{ij}-\bar{x}_j}{s_j}" src="assets/math-e48860306825.svg" style="height:32.5px"/></div>
+<p>注意下标 j：每列用自己的均值、自己的标准差。我们不把整张表所有数字混在一起求一个均值，也不是逐行把每瓶酒的 13 个数平均。</p>
+<h3>真实数据中一个数如何变化？ / One actual value</h3>
+<p>第一瓶酒 Proline=1065；这列均值约 746.8933，标准差约 314.9075。中心化后是 318.1067；标准化后约 1.0102。你可以说：这瓶酒的 Proline 比整批酒的平均值高约一个标准差。</p>
+<p class="en">A standardised value near 1 means roughly one sample standard deviation above that variable's mean. It does not mean a probability of 1 or 100%.</p>
+<h3>为什么中心化不能解决尺度差异？</h3>
+<p>PPT 中 Proline 的 SD≈314.91，Hue 的 SD≈0.229。两列减均值后，SD 还是这两个数。只有进一步除以各自 SD，二者的样本方差才都变成 1。</p>
+<p>用 D 表示把 13 个 SD 放在对角线上的矩阵，Z=Xc D⁻¹。这样写是把 13 次逐列除法合并成一次矩阵运算。原始 PCA 优化原单位下的平方差总和；标准化 PCA 相当于给各列的平方重建误差加权 1/sⱼ²。</p>
+<p class="en">Standardisation changes the metric: an error of one standard deviation has the same weight in every variable. This is a modelling choice, not merely a cosmetic adjustment.</p>
+<p><details><summary>先预测：每个 Proline 都加 500，两种中心化 PCA 会怎样？</summary><p>列均值也加 500，减去均值后完全相同；SD 不变。因此两种中心化 PCA 都不变，至多有计算精度差异。Adding a constant disappears after centring.</p></details></p>
+<p><details><summary>再预测：只把 Proline 乘 100 呢？</summary><p>未标准化 PCA 的协方差结构会改变，方向和百分比通常改变。标准化时均值与 SD 同乘 100，z 值相同，所以标准化 PCA 不变。这里倍数取正数；负倍数还会反转该变量的符号。</p></details></p>
+</section><section class="chapter" id="covariance"><div class="eyebrow">WINE-PCA / 05</div><h1>两列怎样一起变化？<span>Covariance, correlation and the matrix C</span></h1><p>只知道每列的方差还不够。想象两列都很分散，但它们几乎总是一起增加：数据会沿一条斜线延伸。这条斜方向可能比任一原坐标轴保留更多变化。<strong>协方差 covariance</strong> 就在记录这种共同变化。</p>
+<div class="mathbox"><img alt="C_{jk}=\frac{1}{n-1}\sum_{i=1}^{n}(x_{ij}-\bar{x}_j)(x_{ik}-\bar{x}_k)" src="assets/math-b240d40c7d3f.svg" style="height:52.5px"/></div>
+<p>两列同时高于均值、或同时低于均值时，偏差乘积为正；一高一低时为负。全体相加后，正协方差表示总体上同向变化。协方差为零只表示没有线性共同变化，不等于没有任何关系。</p>
+<p class="en">Covariance averages products of centred deviations. Positive covariance indicates that the variables tend to move together. Zero covariance does not rule out a nonlinear relationship.</p>
+<p>例如 x=(2,4,6)，y=(1,2,3)，偏差分别是 (−2,0,2) 和 (−1,0,1)。协方差=(2+0+2)/2=2；SD 分别为 2 和 1，因此相关系数是 2/(2×1)=1。</p>
+<div class="mathbox"><img alt="C=\frac{X_c^T X_c}{n-1},\qquad R_{jk}=\frac{C_{jk}}{s_j s_k},\qquad R=D^{-1} C D^{-1}" src="assets/math-c04e02dee918.svg" style="height:35.0px"/></div>
+<p>Xc 是 n×p，所以 XcᵀXc 是 p×p。本例 C 是 13×13，<strong>不是 178×178</strong>。对角线 Cⱼⱼ 就是第 j 列方差；非对角线是协方差。C 对称，因为乘积交换顺序不变。对任意 w，wᵀCw≥0，所以 C 是半正定，特征值不会有真正的负值。</p>
+<p class="en">The covariance matrix summarises relationships between variables. Its diagonal contains their variances. After standardising, the covariance matrix of Z is the correlation matrix R, with ones on its diagonal.</p>
+<h3>一眼看懂“总方差” / Total variance</h3>
+<p>迹 trace(C) 是对角线之和，也就是各变量样本方差之和。它还等于所有特征值之和。标准化后的 13 列每列方差为 1，所以 trace(R)=13。原单位混合时，trace(C) 是所选坐标度量下的总平方散布，不是可以直接赋予单一化学单位的物理总量。</p>
+<p><details><summary>练习：相关矩阵的对角线为什么不是 0？</summary><p>一个非常量变量与自身的相关系数为 s²/(s·s)=1。平均值为 0 与方差为 0 是两回事。Centring gives mean zero, not variance zero.</p></details></p>
+</section><section class="chapter" id="projection"><div class="eyebrow">WINE-PCA / 06</div><h1>投影：十三个数怎样变成一个数？<span>Projection, directions and scores</span></h1><p>先用二维。一个点 x=(3,1)，方向 w=(1,0)，点积 xᵀw=3，就是在水平轴上的坐标。若 w=(1/√2,1/√2)，点积为 (3+1)/√2≈2.828，这次是在 45° 斜轴上的坐标。</p>
+<div class="mathbox"><img alt="t_i=x_{c,i}^T w=\sum_{j=1}^{p}x_{c,ij}w_j,\qquad \|w\|^2=\sum_{j=1}^{p}w_j^2=1" src="assets/math-7068fdcaf12d.svg" style="height:58.8px"/></div>
+<p>w 是一把新尺子的朝向；tᵢ 是第 i 个点在这把尺子上的读数。<strong>同一方向 w 用于所有酒</strong>，才能比较它们的坐标。如果每瓶酒各选一把不同的尺子，读数就不能直接放在同一坐标轴上。</p>
+<p class="en">A loading vector defines one common axis. A score tells us where one observation lies on that axis. All observations are projected using the same direction.</p>
+<h3>为什么一定要长度为 1？</h3>
+<p>把 w 乘 100，所有 scores 乘 100，方差乘 10,000，方向却没变。若不限制长度，“最大方差”可以靠不停放大 w 得到无限大，问题没有有意义的最大值。单位长度让我们只比较方向。</p>
+<div class="interactive" id="projection-lab"><h3>转动这把尺子 / Rotate the projection axis</h3><p>这里是合成的二维教学数据，不是葡萄酒。先预测最长的方向，再拖动角度。虚线连接原数据点与其投影点。</p><label>角度 / angle <output id="angle-label">0°</output><input id="angle" max="180" min="0" type="range" value="0"/></label><canvas aria-label="合成数据、投影轴与投影点" height="430" id="projection-canvas" width="760"></canvas><p aria-live="polite" id="projection-result"></p></div>
+<p>“投影”还包含重建的意思：从标量 tᵢ 回到原空间，投影点是 tᵢw。它位于经过原点、方向为 w 的直线上；原点到投影点的方向与 w 一致，残差 xᵢ−tᵢw 与 w 正交。</p>
+<p><details><summary>手算：x=(3,1)，w=(1,0)，投影点和误差是多少？</summary><p>t=3，tw=(3,0)，残差=(0,1)，平方误差=1。注意 score 3 是一个数，投影点 (3,0) 是原空间的两个数。</p></details></p>
+</section><section class="chapter" id="eigen"><div class="eyebrow">WINE-PCA / 07</div><h1>最大方差为什么变成特征值问题？<span>From maximum variance to eigenvectors</span></h1><p>先把每一个等号接起来。中心化后，t=Xc w 的均值是 0；所以它的样本方差是 tᵀt/(n−1)。代入 t 得到：</p>
+<div class="mathbox"><img alt="\operatorname{Var}(X_c w)=\frac{(X_c w)^T(X_c w)}{n-1}=w^T Cw" src="assets/math-95b632c30772.svg" style="height:30.0px"/></div>
+<p>PCA 找 w，使这个量最大，同时 wᵀw=1。Lagrange multiplier（拉格朗日乘子）把约束写进一个函数。λ 在这里先只是一个未知乘子。</p>
+<div class="mathbox"><img alt="L(w,\lambda)=w^T Cw-\lambda(w^T w-1)" src="assets/math-3fc185feff27.svg" style="height:22.5px"/></div>
+<p>对 w 求导，C 对称，所以第一项的梯度是 2Cw；第二项是 −2λw。驻点满足：</p>
+<div class="mathbox"><img alt="2Cw-2\lambda w=0\quad\Longrightarrow\quad Cw=\lambda w" src="assets/math-6a4d7cc097a2.svg" style="height:17.5px"/></div>
+<p>这就是特征值方程：C 作用于某些特殊方向时，只缩放它而不改变直线方向。这个方向 w 是 eigenvector，缩放倍数 λ 是 eigenvalue。左右乘上 wᵀ，得到 wᵀCw=λwᵀw=λ，所以<strong>这个方向上的样本方差等于对应特征值</strong>。</p>
+<p class="en">At a stationary direction, Cw = λw. Because w has unit length, the variance along that direction is λ. The first principal direction therefore corresponds to the largest eigenvalue.</p>
+<h3>只写“导数为 0”还不够：为什么最大特征值真是最大值？</h3>
+<p>设 C 的正交特征向量为 v₁,…,vₚ，特征值 λ₁≥…≥λₚ≥0。任意单位方向都能写成 w=Σaⱼvⱼ，且 Σaⱼ²=1。于是：</p>
+<div class="mathbox"><img alt="w^TCw=\sum_{j=1}^{p}\lambda_j a_j^2\leq\lambda_1\sum_{j=1}^{p}a_j^2=\lambda_1" src="assets/math-a3ceacc9cc07.svg" style="height:58.8px"/></div>
+<p>这是一组特征值的加权平均，权重非负且总和为 1，不会超过其中最大值。取 w=v₁ 就达到 λ₁。这样才把“驻点”与“全局最大值”接起来。</p>
+<h3>PC2 为什么正交？ / Why an orthogonal second direction?</h3>
+<p>再找最大方差方向时，如果不加新条件，答案又是 v₁。要求 wᵀv₁=0，相当于不再重复第一方向。上述展开中 a₁=0，剩下能取的最大值是 λ₂，于是选 v₂。后面的主成分依此类推。</p>
+<p>不同 scores 的协方差为 vᵢᵀCvⱼ=λⱼvᵢᵀvⱼ=0。这是<strong>不相关 uncorrelated</strong>，一般不能升级成<strong>独立 independent</strong>。重复特征值对应的子空间可以选不同正交基；即使不重复，v 和 −v 都是同一条轴。</p>
+<p><details><summary>推导练习：C 的两特征值为 9 和 1，w=0.6v₁+0.8v₂。投影方差多少？</summary><p>长度平方=0.36+0.64=1。方差=9×0.36+1×0.64=3.88，小于 9。方差最大时把全部权重放在 v₁ 上。</p></details></p>
+</section><section class="chapter" id="svd"><div class="eyebrow">WINE-PCA / 08</div><h1>SVD、载荷、得分和重建<span>SVD, loadings, scores and reconstruction</span></h1><p>把中心化矩阵写成薄 SVD：Xc=U S Vᵀ。若秩为 r，U 为 n×r，S 为 r×r 对角矩阵，V 为 p×r；U、V 的列分别正交归一，S 的非负对角元素 σⱼ 是 singular values（奇异值）。</p>
+<div class="mathbox"><img alt="C=\frac{X_c^TX_c}{n-1}=V\frac{S^2}{n-1}V^T" src="assets/math-3952fad18ece.svg" style="height:32.5px"/></div>
+<p>因此 V 的列就是主方向，λⱼ=σⱼ²/(n−1)。PCA scores 则是：</p>
+<div class="mathbox"><img alt="T=X_cV=US,\qquad \operatorname{sd}(T_j)=\sqrt{\lambda_j}=\frac{\sigma_j}{\sqrt{n-1}}" src="assets/math-2370a246cb0e.svg" style="height:36.2px"/></div>
+<p class="en">Eigen decomposition starts from C; SVD works directly on the preprocessed data matrix. They give the same principal subspace. R's prcomp uses SVD.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>数学对象</th>
+<th>R 输出</th>
+<th>这里怎样读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V</td>
+<td><code>fit$rotation</code>|每列是一个主方向，每行对应一个原变量</td>
+</tr>
+<tr>
+<td>T</td>
+<td><code>fit$x</code>|每行一瓶酒，每列一个主成分坐标</td>
+</tr>
+<tr>
+<td>√λⱼ</td>
+<td><code>fit$sdev</code>|score 列的样本标准差</td>
+</tr>
+<tr>
+<td>λⱼ</td>
+<td><code>fit$sdev^2</code>|score 列的样本方差</td>
+</tr>
+<tr>
+<td>σⱼ</td>
+<td><code>fit$sdev * sqrt(n-1)</code>|预处理矩阵的奇异值</td>
+</tr>
+</tbody>
+</table></div>
+<p>标准化 PCA 把上面的 Xc 换成 Z，公式结构相同。<code>rotation</code> 中的数叫方向系数；本 PPT 称为 loadings。其他资料也可能把 vⱼ√λⱼ 称为载荷，读文献必须查定义。在标准化 PCA 中，变量 zₖ 与 score Tⱼ 的相关系数是 vₖⱼ√λⱼ，<strong>不只是 vₖⱼ</strong>。</p>
+<h3>保留两个成分到底丢了什么？ / What is lost with two PCs?</h3>
+<p>只留 V₂ 时，T₂=XcV₂；重建 X̂c=T₂V₂ᵀ。再加回均值，得到原数据的二维近似。标准化情形先重建 Ẑ，再逐列乘 SD、加均值。</p>
+<div class="mathbox"><img alt="\|X_c-X_cV_kV_k^T\|_F^2=(n-1)\sum_{j&gt;k}\lambda_j" src="assets/math-122031c981c4.svg" style="height:45.0px"/></div>
+<p>Frobenius norm 的平方就是矩阵所有元素平方之和。用正交投影把总平方长度分为“留下的”和“丢掉的”，因此在固定 k 下，最大化保留方差等价于最小化平方重建误差。这是 PCA 的另一个核心解释。</p>
+<p class="en">For a fixed preprocessing choice, PCA gives the best rank-k approximation in squared Euclidean reconstruction error. Changing the preprocessing changes what that error measures.</p>
+<h3>为什么数值计算常用 SVD？</h3>
+<p>若 Xc 满列秩，在 2-范数下 κ(XcᵀXc)=κ(Xc)²。先形成协方差矩阵可能让已有条件数问题更严重。SVD 直接处理数据，通常更有利于数值稳定性；不是说所有小数据上的特征分解都不可靠。秩亏时普通条件数为无穷，此时可讨论非零奇异值子空间。</p>
+<p><details><summary>检查：<code>p1$sdev[1]</code> 是第一特征值吗？</summary><p>不是，是它的平方根。标准化 Wine 的第一特征值约 4.70585，第一 SD 约 2.16930。To obtain the eigenvalue, square sdev.</p></details></p>
+</section><section class="chapter" id="percent"><div class="eyebrow">WINE-PCA / 09</div><h1>99.98% 和 55.41% 的分母不同<span>Explained variance: read the denominator</span></h1><p>第 j 个主成分的解释率是 λⱼ/Σλ；前两个是 (λ₁+λ₂)/Σλ。分母是这一次预处理下的总方差。它不是“被分对的酒有多少”，也不是“所有科学信息保留了多少”。</p>
+<div class="mathbox"><img alt="\mathrm{EVR}_j=\frac{\lambda_j}{\sum_{h=1}^{p}\lambda_h},\qquad \mathrm{EVR}_{1:2}=\frac{\lambda_1+\lambda_2}{\operatorname{tr}(C)}" src="assets/math-8e3d63adf16f.svg" style="height:58.8px"/></div>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>量 / Quantity</th>
+<th style="text-align:right;">不标准化 / Unscaled</th>
+<th style="text-align:right;">标准化 / Standardised</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PC1 解释率</td>
+<td style="text-align:right;">99.8091%</td>
+<td style="text-align:right;">36.1988%</td>
+</tr>
+<tr>
+<td>PC2 解释率</td>
+<td style="text-align:right;">0.1736%</td>
+<td style="text-align:right;">19.2075%</td>
+</tr>
+<tr>
+<td>前两项累计</td>
+<td style="text-align:right;">99.9827%</td>
+<td style="text-align:right;">55.4063%</td>
+</tr>
+<tr>
+<td>总方差</td>
+<td style="text-align:right;">约 99,391.505</td>
+<td style="text-align:right;">13</td>
+</tr>
+</tbody>
+</table></div>
+<p>原数据 Proline 自身方差约 99,166.717，占原始总方差 <strong>99.7738%</strong>。它的方向已经能解释绝大多数原尺度下的散布，因此原始 PC1 会非常接近 Proline 轴。请区分 <strong>99.7738%（某原变量方差份额）</strong>与<strong>99.8091%（PC1 解释率）</strong>；二者不是同一个定义，也不必相等。</p>
+<p class="en">Proline contributes about 99.77% of the total raw variance before PCA. The first unscaled PC explains about 99.81%. These are different quantities: one concerns an original variable, the other a newly optimised direction.</p>
+<p>标准化后，第一、第二特征值约 4.70585、2.49697，合计 7.20282；除以 13 得 55.4063%。余下 11 个方向合计还有 44.5937%。<strong>标准化不仅改变分母，也改变协方差矩阵、特征值和方向。</strong></p>
+<h3>一句可以在课堂上说清楚的话</h3>
+<blockquote>These percentages describe variation on different scales. I therefore compare the loadings and the score plots in relation to the aim, rather than selecting the larger percentage alone.</blockquote>
+<p>中文：这两个百分比描述的是不同尺度下的变化，所以要结合研究目的看载荷和得分图，不能只选数字大的那个。</p>
+<h3>一个类比，再回到数学 / An analogy with a precise limit</h3>
+<p>想象总分几乎全由一门满分 10,000 分的科目决定，其他科目每门只有几分。解释了总分的 99% 仍可能没解释小分科目的变化。标准化改变了各科目进入总量的权重。这个类比只说明权重，不表示每个化学变量天然同等重要。</p>
+<p><details><summary>思考：55.41% 是否说明标准化 PCA 很差？</summary><p>它说明二维平面只保留了标准化总方差的约 55%，因此不能完整代表十三维数据。是否足够要看用途：探索性图可作起点；精确重建或预测可能需要更多成分，并用相应指标评估。It is a description of retained variance, not a universal quality score.</p></details></p>
+</section><section class="chapter" id="windows"><div class="eyebrow">WINE-PCA / 10</div><h1>Windows：从安装到第一次运行<span>Windows: install, create a script, and run a line</span></h1><h3>1. 安装两样东西 / Install two different tools</h3>
+<p><strong>R 是计算引擎；RStudio 是写代码、看结果的工作界面。</strong>先到 <a href="https://cran.r-project.org/bin/windows/base/">CRAN Windows</a> 下载 R 的 Windows 安装程序，双击，按安装向导完成。再到 <a href="https://posit.co/download/rstudio-desktop/">Posit RStudio Desktop</a> 下载免费版 Windows 安装程序并安装。版本号会更新，认软件名称，不要照着旧截图找完全相同的版本数字。需要管理员许可时由电脑使用者处理。</p>
+<p class="en">Install R first, then the free RStudio Desktop. R does the calculation; RStudio provides the editor, Console, plots and file panels.</p>
+<p>打开 RStudio 后，应在 Console 看见 R 版本。点击 <code>&gt;</code> 后面，输入 <code>1 + 1</code> 再按 Enter，应得到 <code>[1] 2</code>。<code>[1]</code> 是输出的索引提示，答案是 2。</p>
+<figure class="figure"><img alt="旧课真实截图：RStudio 识别 R，Console 可以计算 1 + 1。" loading="lazy" src="assets/shot-01.webp"/><figcaption>旧课真实截图：RStudio 识别 R，Console 可以计算 1 + 1。</figcaption></figure>
+<p>如果提示找不到 R，先确认 R 已装，再重启 RStudio；必要时在 RStudio 的 R 版本选择窗口选择实际安装的 R。学校电脑无安装权限时先联系 IT，不要下载来源不明的“修复工具”。</p>
+<figure class="figure"><img alt="旧课真实截图：找不到 R 的提示；这不是代码语法错误。" loading="lazy" src="assets/shot-02.webp"/><figcaption>旧课真实截图：找不到 R 的提示；这不是代码语法错误。</figcaption></figure>
+<h3>2. 新建项目 / Create a project</h3>
+<p>项目是把脚本、数据和图放在一起的文件夹。它对一次 PCA 不是数学上的必要条件，但能避免反复找文件。本节复用旧课真实截图，图中项目名为 <strong>PCA_Practice</strong>；这次请填写 <strong>Wine_PCA</strong>。菜单操作相同。</p>
+<ol>
+<li>点击 <strong>File → New Project</strong>。</li>
+<li>点击 <strong>New Directory</strong>，因为要新建文件夹。</li>
+<li>点击 <strong>New Project</strong>（普通项目）。</li>
+<li>Directory name 输入 <code>Wine_PCA</code>；父文件夹用 Browse 选择自己的 Documents。不要启用 Git 或其他高级选项。</li>
+<li>点击 <strong>Create Project</strong>。右上应出现 Wine<em>PCA，右下 Files 应有 Wine</em>PCA.Rproj。</li>
+</ol>
+<p class="en">Choose File → New Project → New Directory → New Project. Name this project Wine_PCA. The reference screenshots show an earlier project called PCA_Practice; use the same buttons with the new name.</p>
+<figure class="figure"><img alt="步骤 1：File → New Project。" loading="lazy" src="assets/shot-03.webp"/><figcaption>步骤 1：File → New Project。</figcaption></figure><br/>
+<figure class="figure"><img alt="步骤 2：New Directory。" loading="lazy" src="assets/shot-04.webp"/><figcaption>步骤 2：New Directory。</figcaption></figure><br/>
+<figure class="figure"><img alt="步骤 3：普通 New Project。" loading="lazy" src="assets/shot-05.webp"/><figcaption>步骤 3：普通 New Project。</figcaption></figure><br/>
+<figure class="figure"><img alt="步骤 4：这里改填 Wine_PCA，选择父文件夹，再 Create Project。" loading="lazy" src="assets/shot-06.webp"/><figcaption>步骤 4：这里改填 Wine_PCA，选择父文件夹，再 Create Project。</figcaption></figure><br/>
+<figure class="figure"><img alt="步骤 5：右上项目名和右下 .Rproj 是成功检查点；本次应显示 Wine_PCA。" loading="lazy" src="assets/shot-07.webp"/><figcaption>步骤 5：右上项目名和右下 .Rproj 是成功检查点；本次应显示 Wine_PCA。</figcaption></figure>
+<h3>3. 新建 R 脚本 / Create an R script</h3>
+<p>按 <strong>Ctrl + Shift + N</strong>，或 File → New File → R Script。左上出现编辑区。这里写代码，左下 Console 看答案，右上 Environment 看已产生的对象，右下 Plots 看图。</p>
+<figure class="figure"><img alt="新建 R Script 的菜单。" loading="lazy" src="assets/shot-08.webp"/><figcaption>新建 R Script 的菜单。</figcaption></figure><br/>
+<figure class="figure"><img alt="左上写代码，左下看 Console 输出。" loading="lazy" src="assets/shot-09.webp"/><figcaption>左上写代码，左下看 Console 输出。</figcaption></figure>
+<p>先亲手输入下面四行，不用一次复制整本教材：</p>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>1 + 1
+a &lt;- c(2, 4, 6)
+mean(a)
+sd(a)
+</code></pre></div>
+<p>按 <strong>Ctrl + S</strong>，文件名写 <code>wine_practice.R</code>，保存到 Wine_PCA 项目中。<code>.R</code> 是脚本；<code>.Rproj</code> 是项目入口；<code>.csv</code> 是数据；<code>.html</code> 是教材网页。它们不能靠改扩展名互相转换。</p>
+<figure class="figure"><img alt="保存对话框操作参考：本次输入 wine_practice.R，位置为 Wine_PCA。" loading="lazy" src="assets/shot-11.webp"/><figcaption>保存对话框操作参考：本次输入 wine_practice.R，位置为 Wine_PCA。</figcaption></figure>
+<h3>4. 保存不等于运行 / Saving is not running</h3>
+<p>光标放在第一行，按 <strong>Ctrl + Enter</strong>，或点编辑区上方 <strong>Run</strong>。Console 出现 <code>1 + 1</code> 和答案 2。再运行第二行，它创建 a，可能没有数字打印；第三行才打印均值 4。选中多行后 Ctrl+Enter 会按顺序运行选区。</p>
+<figure class="figure"><img alt="Run 按钮与当前行位置。" loading="lazy" src="assets/shot-13.webp"/><figcaption>Run 按钮与当前行位置。</figcaption></figure><br/>
+<figure class="figure"><img alt="运行后 Console 的答案和新提示符。" loading="lazy" src="assets/shot-14.webp"/><figcaption>运行后 Console 的答案和新提示符。</figcaption></figure><br/>
+<figure class="figure"><img alt="选中连续几行再 Run；图中是旧课的小练习，运行方法完全相同。" loading="lazy" src="assets/shot-15.webp"/><figcaption>选中连续几行再 Run；图中是旧课的小练习，运行方法完全相同。</figcaption></figure>
+<p><strong>Source</strong> 从头运行整份脚本。刚学习时先分段 Run，知道每段的结果后再 Source。用 Source 时，单独写对象名不一定自动打印，要明确显示结果可用 <code>print(...)</code>。</p>
+<figure class="figure"><img alt="Source 按钮与 Plots 区域的位置。" loading="lazy" src="assets/shot-17.webp"/><figcaption>Source 按钮与 Plots 区域的位置。</figcaption></figure>
+<p><details><summary>出问题先查这里 / Quick troubleshooting</summary><ul><li>Console 出现 <code>+</code>：多半有括号或引号没闭合；按 Esc 取消当前不完整语句，再检查脚本。</li><li><code>object 'X' not found</code>：还没运行创建 X 的行，或重启后对象消失。重新从导入步骤运行。</li><li>红色报错：读第一条错误，不要把后续每条都当独立问题。</li><li>没有图：确认运行了 plot，不是只保存脚本；再点右下 Plots。</li><li>不要把 Console 自动出现的 <code>&gt;</code>、<code>+</code> 提示符复制进脚本。</li></ul></details></p>
+<p>软件安装页面随版本会变化。上述图是已有真实 RStudio 操作截图，不是伪造的安装向导。本节之外，旧教材 <a href="../lesson3/#project">项目</a>、<a href="../lesson3/#run">运行</a> 章节提供同一流程的完整演示。</p>
+</section><section class="chapter" id="import"><div class="eyebrow">WINE-PCA / 11</div><h1>自己写导入代码：先让数据正确进来<span>Import the Wine data yourself</span></h1><h3>1. 下载的是数据，不是代码 / Download the data</h3>
+<p>点击 <a href="wine.csv">下载 Wine 数据表 wine.csv</a>，保存到自己的 Downloads。它是 UCI 原始 178 行数据的 CSV 副本，<strong>没有标题行</strong>。可以在 Excel 看，但分析时不要改数值或另存覆盖。我们下一步用文件选择窗口直接选它，不需要照抄别人的电脑路径。</p>
+<p class="en">This download is a data table, not a script. It contains the original 178 rows, including the cultivar in column 1, without a header row.</p>
+<h3>2. 在 wine_practice.R 末尾亲手写这两行</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>wine &lt;- read.csv(file.choose(), header = FALSE)
+dim(wine)
+</code></pre></div>
+<p>选中第一行，Ctrl+Enter。弹出窗口后打开 Downloads，选择刚下载的 <strong>wine.csv</strong>，点 Open。<code>file.choose()</code> 会等待你选文件，这是正常的；选文件之前不要继续乱点 Run。再运行 <code>dim(wine)</code>，必须得到 <strong>178 14</strong>。</p>
+<figure class="figure"><img alt="文件选择操作参考：打开 Downloads；本次要选 wine.csv。" loading="lazy" src="assets/shot-20.webp"/><figcaption>文件选择操作参考：打开 Downloads；本次要选 wine.csv。</figcaption></figure><br/>
+<figure class="figure"><img alt="旧课真实选文件界面：图中是 penguins.csv，本次对应位置请选择 wine.csv，不能选 .R 或 .Rproj。" loading="lazy" src="assets/shot-21.webp"/><figcaption>旧课真实选文件界面：图中是 penguins.csv，本次对应位置请选择 wine.csv，不能选 .R 或 .Rproj。</figcaption></figure>
+<p>第一行从右往左读：<code>file.choose()</code> 给出选中的路径；<code>read.csv</code> 按逗号分隔读成数据表；<code>header=FALSE</code> 表示第一行也是数据，不是变量名；最后 <code>&lt;-</code> 把表存成 wine。<code>dim</code> 返回行数、列数。如果误用默认 header=TRUE，第一瓶酒会被当标题，行数会少一行。</p>
+<p class="en">The expression is evaluated on the right, then stored under the name on the left. Always check the dimensions before running PCA.</p>
+<h3>3. 给列起名 / Name the columns</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>names(wine) &lt;- c(
+  "Cultivar", "Alcohol", "Malic_acid", "Ash",
+  "Alcalinity_of_ash", "Magnesium", "Total_phenols",
+  "Flavanoids", "Nonflavanoid_phenols", "Proanthocyanins",
+  "Color_intensity", "Hue", "OD280_OD315", "Proline"
+)
+head(wine)
+</code></pre></div>
+<p>这段括号跨了几行，要选中整个 <code>names(...) &lt;- c(...)</code> 语句一起运行。引号里面是名字，顺序必须与文件一致。<code>head</code> 显示前六行，不是只取六行来分析。</p>
+<h3>4. 保留标签，建立 X / Separate the label</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>cultivar &lt;- factor(wine$Cultivar)
+X &lt;- wine[, -1]
+dim(X)
+sum(is.na(X))
+table(cultivar)
+</code></pre></div>
+<p><code>$</code> 从表里取一列；<code>factor</code> 表示类别。方括号形式是 <code>[行, 列]</code>：逗号前留空表示所有行，<code>-1</code> 表示去掉第一列。<code>is.na</code> 判断缺失，<code>sum</code> 数有几个。预期 X 为 <strong>178 13</strong>，缺失个数 <strong>0</strong>，三组数量 <strong>59、71、48</strong>。</p>
+<p class="en">The label is retained separately. X contains only the 13 chemical measurements. No rows are removed in this dataset because these variables have no missing entries.</p>
+<p><details><summary>练习：<code>wine[1, ]</code>、<code>wine[, 1]</code>、<code>wine[1:3, 2:4]</code> 各是什么？</summary><p>第一瓶酒的全部列；全部酒的第一列；前三瓶酒的第 2–4 列。R 从 1 开始编号。The comma separates row selection from column selection.</p></details></p>
+<p>以后重跑时 <code>file.choose()</code> 会再次弹窗。学会后可以把数据放进项目目录，改写为 <code>read.csv("wine.csv", header=FALSE)</code>；这要求 wine.csv 确实位于当前项目目录，而不是凭空输入这个名字。</p>
+</section><section class="chapter" id="rfit"><div class="eyebrow">WINE-PCA / 12</div><h1>两次 PCA：每行到底在干什么？<span>Fit both PCA models and inspect the objects</span></h1><h3>1. 唯一改变的是 scale. / Change one setting</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>p0 &lt;- prcomp(X, center = TRUE, scale. = FALSE)
+p1 &lt;- prcomp(X, center = TRUE, scale. = TRUE)
+summary(p0)
+summary(p1)
+</code></pre></div>
+<p><code>prcomp</code> 是 R 自带函数，不需要另装包。X 是相同的 13 列输入；<code>center=TRUE</code> 都减列均值；<code>scale.=TRUE</code> 再除以各列 SD。<code>scale.</code> 末尾的点是参数名的一部分。p0 与 p1 是你起的对象名，不是固定语法。</p>
+<p class="en">Both models centre the columns. Only p1 standardises them. This controlled comparison isolates the effect of scaling.</p>
+<p><code>summary</code> 三行主要输出依次为：Standard deviation（√λ）、Proportion of Variance（每轴比例）、Cumulative Proportion（累计比例）。0.55406 是比例，乘 100 才是 55.406%。</p>
+<h3>2. 自己算百分比 / Calculate it rather than copying it</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>lambda0 &lt;- p0$sdev^2
+lambda1 &lt;- p1$sdev^2
+share0 &lt;- lambda0 / sum(lambda0)
+share1 &lt;- lambda1 / sum(lambda1)
+c(Unscaled = sum(share0[1:2]) * 100,
+  Standardised = sum(share1[1:2]) * 100)
+</code></pre></div>
+<p><code>^2</code> 逐项平方；<code>sum</code> 加总；<code>[1:2]</code> 只取第一、第二项；<code>c</code> 把两项结果并排放在一起。这里依次得到约 <strong>99.98271、55.40634</strong>。</p>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>sum(lambda0)
+sum(lambda1)
+sd(X$Proline)
+sd(X$Hue)
+var(X$Proline) / sum(sapply(X, var)) * 100
+</code></pre></div>
+<p>预期约 <strong>99391.505、13、314.9075、0.22857、99.77384</strong>。<code>sapply(X,var)</code> 对每一列调用 var，返回 13 个方差。把某个变量的方差除以总和，才得到它在原始总方差中的份额。</p>
+<h3>3. 查看载荷 / Inspect direction coefficients</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>sort(abs(p0$rotation[, 1]), decreasing = TRUE)
+sort(abs(p1$rotation[, 1]), decreasing = TRUE)
+</code></pre></div>
+<p><code>rotation[,1]</code> 取第一主方向的 13 个系数；<code>abs</code> 只看绝对值；<code>sort(...,decreasing=TRUE)</code> 从大到小排。预期前两项为 raw：Proline 0.999823、Magnesium 0.017868；scaled：Flavanoids 0.422934、Total_phenols 0.394661。绝对值适合比较大小，分析正负关系时要看原来的带符号系数。</p>
+<h3>4. 把对象与数学核对 / Connect output to algebra</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>Z &lt;- scale(X, center = TRUE, scale = TRUE)
+max(abs(cov(Z) - cor(X)))
+max(abs(p1$x - Z %*% p1$rotation))
+diag(cov(p1$x))[1:2]
+p1$sdev[1:2]^2
+</code></pre></div>
+<p><code>%*%</code> 是矩阵乘法，<code>*</code> 是逐项相乘；两者别混用。前两个误差应接近 0（例如 10⁻¹⁴ 量级，具体随平台变化）；最后两行应相同，约 <strong>4.70585、2.49697</strong>。浮点计算用“接近 0”判断，不强求所有位数恰好为 0。</p>
+<p class="en">These checks connect the software to the theory: covariance of standardised data equals correlation of raw data; scores equal data times directions; score variances equal eigenvalues.</p>
+<figure class="figure"><img alt="用户实际运行 Wine PCA 后的 R 输出图；图轴的正负可以与教材镜像，几何关系不变。" loading="lazy" src="assets/wine-r-actual.png"/><figcaption>用户实际运行 Wine PCA 后的 R 输出图；图轴的正负可以与教材镜像，几何关系不变。</figcaption></figure>
+<h3>保存 / Save your own work</h3>
+<p>Ctrl+S 保存脚本。下次打开 Wine<em>PCA.Rproj，再打开 wine</em>practice.R，从导入开始顺序运行。保存脚本保留的是操作步骤；当前 Environment 里的对象不能代替一个可重现的脚本。</p>
+</section><section class="chapter" id="plots"><div class="eyebrow">WINE-PCA / 13</div><h1>自己画图，再读懂一个点<span>Draw the scores and explain every visual element</span></h1><h3>先画一张最简单的 / Begin with a plain plot</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>plot(p1$x[, 1], p1$x[, 2],
+     xlab = "PC1 (36.20%)", ylab = "PC2 (19.21%)",
+     main = "Standardised Wine PCA")
+</code></pre></div>
+<p>先运行三行一起组成的语句。右下 Plots 应出现 178 个点。横坐标是第一 score 列，纵坐标是第二列。点不是变量，不是品种平均值，而是一瓶酒。重叠的点肉眼可能看不出全部 178 个。</p>
+<h3>再加入颜色和形状 / Add labels after fitting</h3>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>colours &lt;- c("#222626", "#B28A3E", "#557D89")
+symbols &lt;- c(16, 15, 17)
+group_id &lt;- as.integer(cultivar)
+plot(p1$x[, 1], p1$x[, 2],
+     col = colours[group_id], pch = symbols[group_id],
+     xlab = "PC1 (36.20%)", ylab = "PC2 (19.21%)",
+     main = "Standardised Wine PCA")
+legend("topright", legend = levels(cultivar),
+       col = colours, pch = symbols, title = "Cultivar")
+</code></pre></div>
+<p><code>pch</code> 控制点形：16 圆、15 方、17 三角。<code>group_id</code> 是每行标签对应的 1、2、3，拿它到 colours 里查颜色。<code>legend</code> 加图例。它们全部发生在 <code>prcomp</code> 之后，未重新计算方向。</p>
+<p class="en">Colour and shape encode cultivar membership. They are annotations of scores already computed without the labels.</p>
+<h3>与 PPT 对照 / Compare the two analyses</h3>
+<figure class="figure"><img alt="实际 Wine 数据的两种 PCA 得分图；为便于对照 PPT，轴方向统一为最大绝对载荷取正。" loading="lazy" src="assets/wine-scores.png"/><figcaption>实际 Wine 数据的两种 PCA 得分图；为便于对照 PPT，轴方向统一为最大绝对载荷取正。</figcaption></figure>
+<p>左图横向主要是 Proline 的变化，品种 2 与 3 的重叠较多；右图分组更清楚，但不能把“看上去分开”叫作预测准确率。图里没有训练分类器，也没有独立测试集。两张图分别调整了坐标范围，所以纸面上的一厘米不是同一种数值距离。</p>
+<div class="interactive" id="wine-lab"><h3>真实数据交互 / Explore the actual Wine scores</h3><div class="controls"><label>分析 <select id="wine-mode"><option value="unscaled">中心化、不标准化 / Unscaled</option><option value="scaled">中心化、标准化 / Standardised</option></select></label><label><input checked="" id="wine-colour" type="checkbox"/> 显示品种 / Cultivar colours</label><label><input id="wine-flip" type="checkbox"/> 反转 PC1 / Flip PC1</label></div><canvas aria-label="Wine PCA score plot" height="500" id="wine-canvas" width="860"></canvas><p aria-live="polite" id="wine-result"></p></div>
+<p>按顺序做三次实验：①不看颜色，描述点云形状；②打开颜色，描述组间关系；③反转 PC1。第③步只改变坐标的正负，不改变点间距离、解释率、分组结构或重建。</p>
+<h3>两个载荷数能说明多少？ / Interpreting the loading table</h3>
+<p>原始 PC1 的 Proline 系数约 0.9998，Magnesium 约 0.0179，其余更小，因此方向几乎贴着 Proline 轴。标准化 PC1 的 Flavanoids 约 0.4229、Total phenols 约 0.3947，多个变量参与同一方向。系数相近且同号表示它们在这个轴上同向贡献，不能因此断言因果。</p>
+<p>变量 k 在前两轴中的表示质量可以用 <strong>cos² 合计</strong>量化：对标准化数据，Σⱼ₌₁² λⱼvₖⱼ²；对原始数据，再除以该变量原方差 sₖ²。大总解释率不保证每列的这个比例都大。</p>
+<div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>quality1 &lt;- rowSums(sweep(p1$rotation[, 1:2]^2,
+                          2, p1$sdev[1:2]^2, "*"))
+sort(quality1)
+</code></pre></div>
+<p>这段选前两列、系数平方、每列乘对应特征值、按行加总。它回答“每个变量在二维平面中表示得多好”，与“谁对 PC1 的方向贡献大”不同。</p>
+<p><details><summary>为什么你运行的图可能左右或上下相反？</summary><p>特征向量 v 与 −v 等价，软件可以任取其一。对应 score 同时变号，图就镜像。比较时看相对位置、距离、解释率和绝对载荷，而不是把左右朝向当作结论。A sign flip changes orientation, not the PCA solution.</p></details></p>
+</section><section class="chapter" id="slide1"><div class="eyebrow">WINE-PCA / 14</div><h1>第一页：每一块内容怎样支撑论点？<span>Slide 1: the question, mechanism and controlled comparison</span></h1><figure class="figure"><img alt="你当前两页 PPT 的第一页。" loading="lazy" src="assets/slide-1.png"/><figcaption>你当前两页 PPT 的第一页。</figcaption></figure>
+<p>这页不是背景知识堆积，而是在建立一个可检验的疑问：如果某一列数值变化特别大，最大方差 PCA 是否就会主要追随它？</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>指向哪里</th>
+<th>你要解释的意思</th>
+<th>自然的英语</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标题</td>
+<td>更高解释率是否就是更好结果？</td>
+<td>Does a higher explained variance always mean a better PCA?</td>
+</tr>
+<tr>
+<td>178 × 13</td>
+<td>数据规模与分析目的；标签只上色</td>
+<td>The aim is to explore the chemical measurements together.</td>
+</tr>
+<tr>
+<td>方差公式</td>
+<td>方向由最大化方差确定；w 需要单位长度</td>
+<td>PCA looks for unit directions with the largest projected variance.</td>
+</tr>
+<tr>
+<td>两个 SD</td>
+<td>两变量数值尺度相差很大；中心化不会消除差异</td>
+<td>These measurements have very different numerical scales.</td>
+</tr>
+<tr>
+<td>99.77%</td>
+<td>原始总方差已几乎由 Proline 构成</td>
+<td>Proline accounts for almost all of the total raw variance.</td>
+</tr>
+<tr>
+<td>两列方法对照</td>
+<td>同样中心化；只有第二个再除以 SD</td>
+<td>Both subtract the mean; only one divides by the standard deviation.</td>
+</tr>
+<tr>
+<td>R 两行</td>
+<td>同一数据、一项设置变化的对照</td>
+<td>I kept the data fixed and changed only the scaling option.</td>
+</tr>
+</tbody>
+</table></div>
+<p>如果被问公式，你要能从 <code>t=Xc w</code> 开始推导，不只是念“w transpose C w”。C 是 13×13 的协方差矩阵，w 是 13 个方向权重；样本数 n=178 只出现在方差分母 177。</p>
+<p class="en">Slide 1 motivates the comparison. The standard deviations explain why scale matters; the two R calls show how that question was tested.</p>
+<h3>容易被问住的细节</h3>
+<p>“给每个变量相同 starting variance”不是说它们对每个 PC 的载荷相同。标准化只使 C 的对角线都为 1，相关结构仍决定方向。</p>
+<p>数据来自 UCI Wine，建议在 PPT 页脚添加简短出处，例如 <strong>Data: UCI Wine dataset (178 observations; 13 features), archive.ics.uci.edu/dataset/109/wine</strong>。当前文件截图没有清晰的数据出处；教材这里补足来源，便于你准备最终提交。</p>
+<p><details><summary>复述检查：只给你这页，30 秒说清实验设计。</summary><p>“I compare two PCA analyses of the same 178 wines. Both are centred; one is also standardised. The raw variances are very uneven, especially for Proline. I examine whether scaling changes the principal directions and the two-dimensional representation.”</p></details></p>
+</section><section class="chapter" id="slide2"><div class="eyebrow">WINE-PCA / 15</div><h1>第二页：从证据走到有边界的结论<span>Slide 2: results, interpretation and a justified choice</span></h1><figure class="figure"><img alt="你当前两页 PPT 的第二页。" loading="lazy" src="assets/slide-2.png"/><figcaption>你当前两页 PPT 的第二页。</figcaption></figure>
+<p>读图顺序是<strong>上方百分比 → 下方载荷 → 点云分组 → 分析选择 → 局限</strong>。这样观众先看见一个反常现象，再听到解释，而不是同时听五个互不相连的事实。</p>
+<ol>
+<li><strong>百分比：</strong>99.98% 对 55.41%。先说它们是前两个 PC 的累计比例，不能误说都是 PC1。</li>
+<li><strong>载荷：</strong>左边 Proline 的方向系数几乎为 1，解释了为何原始结果主要沿这列变化。</li>
+<li><strong>点云：</strong>右图多个测量参与方向，品种在这两个轴上分得更清楚。先说是观察，再说局限。</li>
+<li><strong>选择：</strong>目标是一起探索 13 项不同尺度的测量，因此选择标准化作为这个分析的起点。</li>
+<li><strong>范围：</strong>二维还漏掉约 45% 标准化方差，视觉分离也没有给出测试准确率。</li>
+</ol>
+<p class="en">The conclusion follows from the aim, the loadings and the plots together. The cumulative variance percentage alone is insufficient.</p>
+<p>PPT 中 “scaling changes the denominator” 可以口头补完整：<strong>Scaling changes the covariance structure, the principal directions and the total variance.</strong> 只说分母变了容易让人误以为方向没变；事实是整套几何关系都重新定义了。</p>
+<h3>哪些话不能从图推出？ / What the evidence does not establish</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>观察支持</th>
+<th>还需要额外工作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>在此二维图上组间分离更清楚</td>
+<td>独立测试数据上的分类准确率</td>
+</tr>
+<tr>
+<td>原始 PC1 方向接近 Proline 轴</td>
+<td>Proline 是最重要的生物学原因</td>
+</tr>
+<tr>
+<td>两 PC 保留 55.41% 标准化总方差</td>
+<td>所有变量都被表示得一样好</td>
+</tr>
+<tr>
+<td>标准化适合当前探索目的</td>
+<td>所有 PCA 数据都必须标准化</td>
+</tr>
+</tbody>
+</table></div>
+<p>面对“不如再多保留几个成分？”可以答：两成分是为了展示二维图；若要表示更多变异，可以查看碎石图和累计曲线。标准化 Wine 到 PC5 累计约 80.16%，到 PC8 约 92.02%。这是探索阈值的例子，不是通用的最佳维数规则。</p>
+<p><details><summary>老师说“99.98% 本来就很好，为什么不用？”你怎么答？</summary><p>“It is very good for preserving variation in the original scales. My aim, however, is to explore all thirteen measurements together. Because Proline dominates that raw metric, I also examine the standardised representation.” 中文：承认它对原尺度目标确实很好，再说明自己的目标不同，而不是把原始 PCA 判成算错。</p></details></p>
+</section><section class="chapter" id="speech"><div class="eyebrow">WINE-PCA / 16</div><h1>三分钟讲稿：逐段对着 PPT 讲<span>A three-minute script, with pointing and meaning</span></h1><p>下面沿用当前讲稿的论证顺序，并把“只改变分母”补成更完整的解释。约 320 词；按每分钟 115–125 词，加上指图停顿，目标接近三分钟。第一次请计时，动作提示和中文不读出声。</p>
+<h3>第一页，约 0:00–1:25 / Slide 1</h3>
+<p><strong>指标题，抛出问题。</strong></p>
+<blockquote>
+<p>Today, I’m asking whether a higher explained variance always means a better PCA.</p>
+</blockquote>
+<p>今天我要讨论，解释方差更高是否一定代表更好的 PCA。这里的 better 需要分析目的来定义，后文会回答。</p>
+<p><strong>指数据描述，先说数据和标签。</strong></p>
+<blockquote>
+<p>I used 178 wines with 13 chemical measurements. The aim is to explore these measurements together. The cultivar labels only colour the plots; they do not enter the PCA calculation.</p>
+</blockquote>
+<p>我用了 178 瓶酒的 13 项化学测量，想把它们放在一起探索。品种只用于图上的颜色，不进入 PCA 计算。重点是让听众知道你没有把答案标签喂给无监督分析。</p>
+<p><strong>指方差公式，然后移动到 SD 对比。</strong></p>
+<blockquote>
+<p>The formula here expresses the key idea: PCA looks for directions with the largest variance. But look at these standard deviations. Proline is about 315, while Hue is about 0.23. These are very different numerical scales.</p>
+</blockquote>
+<p>公式说明 PCA 找方差最大的方向；两列 SD 差别很大。不要把 SD 念成 variance；方差还要平方。听众若追问约束，就解释方向长度必须为 1。</p>
+<p><strong>指 99.77%，再指预处理两栏。</strong></p>
+<blockquote>
+<p>In fact, Proline accounts for 99.77 percent of the total raw variance. So it could dominate PCA before we even consider the other measurements. Both methods subtract the mean. The standardised version also divides by the standard deviation, giving every variable a starting variance of one.</p>
+</blockquote>
+<p>原始总方差几乎由 Proline 构成。两法都中心化，第二种额外标准化；starting variance 指各原变量进入 PCA 时的方差。</p>
+<p><strong>指 R 两行，然后翻页。</strong></p>
+<blockquote>
+<p>In R, I kept the same data and changed only the scaling option. Let’s look at the results.</p>
+</blockquote>
+<p>这是一个清楚的对照实验：数据固定，设置只改一项。</p>
+<h3>第二页，约 1:25–3:00 / Slide 2</h3>
+<p><strong>左右各指一次百分比，停半秒。</strong></p>
+<blockquote>
+<p>Without standardisation, the first two components explain almost 100 percent of the variance. After standardisation, they explain about 55 percent. The left-hand result might seem better. But the table below explains why that percentage is so high.</p>
+</blockquote>
+<p>先把观众的直觉说出来，然后引导他们往载荷表看。“前两个”不能省略成第一主成分。</p>
+<p><strong>指 Proline 0.9998，再指标准化的两个载荷。</strong></p>
+<blockquote>
+<p>Proline’s coefficient is nearly one. The next largest is only about 0.018. So the first component mainly follows Proline. After standardisation, several measurements contribute to the first component.</p>
+</blockquote>
+<p>这句话把数值与方向含义连起来。你不需要逐个读完小数位；0.018 对应 Magnesium。</p>
+<p><strong>用手指品种 2、3 较重叠的区域，再指右图。</strong></p>
+<blockquote>
+<p>We can also see more overlap between these two cultivars on the left, and clearer separation on the right. Scaling changes the covariance structure, the principal directions and the total variance. So the two percentages are not directly comparable quality scores.</p>
+</blockquote>
+<p>图是可见的探索证据；解释率则属于不同尺度，不能拿大小直接打分。</p>
+<p><strong>指选择和局限，用一句收束研究问题。</strong></p>
+<blockquote>
+<p>For exploring all 13 measurements together, I would choose standardised PCA. But clearer separation does not prove classification accuracy. And the right-hand plot still leaves out about 45 percent of the standardised variance. My choice therefore depends on the loadings, the plots and the purpose of the analysis.</p>
+</blockquote>
+<p>你作了具体选择，也说明证据的范围。最后一句回到标题：更高解释率并非单独足够的选择标准。</p>
+<div class="interactive"><h3>练习计时 / Rehearsal timer</h3><p id="timer" role="timer">0:00</p><button id="timer-toggle">开始 / Start</button> <button id="timer-reset">重置 / Reset</button><p>先只看 PPT 讲；卡住时记下卡点，回到对应章节。计时不等于理解测试。</p></div>
+<h3>发音提示 / Useful pronunciations</h3>
+<p>variance /ˈveəriəns/；covariance /ˌkəʊˈveəriəns/；eigenvector /ˈaɪɡənˌvektə/；cultivar /ˈkʌltɪvɑː/；Proline /ˈprəʊliːn/。读数字时，99.98% 可以自然读 “almost one hundred percent”，载荷 0.9998 可读 “nearly one”。</p>
+</section><section class="chapter" id="qa"><div class="eyebrow">WINE-PCA / 17</div><h1>分层问答：先短答，再解释为什么<span>Questions: a short spoken answer, then the reasoning</span></h1><p>先读问题，关掉答案用英语说 1–3 句，再展开。短答给你课堂表达的长度；中文解释负责检查你是否真的懂。</p>
+<div class="interactive" id="qa-prompt"><h3>抽一个追问 / Draw a question</h3><button id="random-question">随机抽题 / Random question</button><p aria-live="polite" id="random-result">先准备纸笔，说完再打开下面的答案。</p></div>
+<h3>A. 基础题 / Foundations</h3>
+<p><details class="question"><summary>1. What is PCA doing to these wines?</summary><p class="en">It replaces the chemical measurements with new, uncorrelated coordinates ordered by variance. I use the first two coordinates to visualise the wines.</p><p>方向是原变量的线性组合。保留全部方向只是换坐标；丢掉后面的方向才是真正降维。</p></details><br/>
+<details class="question"><summary>2. Why do you centre the data?</summary><p class="en">Centring makes PCA describe variation around the sample mean, rather than the location of the cloud relative to the original zero.</p><p>未中心化的 XᵀX/(n−1) 包含均值位置项。设原均值向量为 μ，则 XᵀX=XcᵀXc+nμμᵀ；最大方向可能主要体现均值，而不是围绕均值的散布。</p></details><br/>
+<details class="question"><summary>3. Does centring give every variable variance one?</summary><p class="en">No. Centring gives mean zero. Dividing by the sample standard deviation gives variance one.</p><p>减常数不改变方差。先能说清这一点，才算分清两种预处理。</p></details><br/>
+<details class="question"><summary>4. Why are the labels excluded?</summary><p class="en">I want the directions to be determined by the chemical measurements alone. The cultivar labels are used afterwards to interpret the plot.</p><p>类别编码还没有连续数量含义。若把标签放进去，就改变了研究设计。</p></details><br/>
+<details class="question"><summary>5. Is PCA supervised learning?</summary><p class="en">Ordinary PCA is unsupervised: it finds directions using X without a response variable. We can inspect known labels afterwards.</p><p>后面用颜色检查分组没有把之前的拟合变成监督学习；若按标签挑设置，就需要承认选择过程中用了标签信息。</p></details><br/>
+<details class="question"><summary>6. What is the difference between a loading and a score?</summary><p class="en">In this presentation, a loading is a coefficient defining a principal direction. A score is the coordinate of one wine in that direction.</p><p>本例 rotation 是 13×13；x 是 178×13。解释系数与样本坐标时先检查维度。</p></details><br/>
+<details class="question"><summary>7. Why must w have unit length?</summary><p class="en">Otherwise I could increase the variance simply by multiplying w by a larger number. The unit-length constraint makes it a comparison of directions.</p><p>Var(Xc·aw)=a²Var(Xcw)。无约束时通常无有限最大值。</p></details><br/>
+<details class="question"><summary>8. Why does the largest eigenvalue give PC1?</summary><p class="en">The variance along a unit eigenvector equals its eigenvalue. Any unit direction gives a weighted average of the eigenvalues, so none exceeds the largest.</p><p>可以展开 w=Σaⱼvⱼ 并写 Σaⱼ²=1，而不必重新背一页求导。</p></details><br/>
+<details class="question"><summary>9. Are different PCs independent?</summary><p class="en">Their scores are uncorrelated in the analysed sample. Independence is stronger and does not follow in general.</p><p>联合正态是零相关可推出独立的一种特殊情形；普通 PCA 不要求正态。</p></details></p>
+<h3>B. 结果题 / The actual results</h3>
+<p><details class="question"><summary>10. Why is the unscaled percentage so high?</summary><p class="en">Proline accounts for almost all of the raw total variance. The first unscaled direction is therefore very close to the Proline axis.</p><p>原变量方差份额 99.77%，第一方向 Proline 系数绝对值 0.9998，这两条证据互相支撑。</p></details><br/>
+<details class="question"><summary>11. Does 99.98% mean 99.98% classification accuracy?</summary><p class="en">No. It is the proportion of total variance retained by two components. No classifier or test accuracy was calculated here.</p><p>解释率是特征值之比；准确率是预测标签正确次数除以测试样本数。</p></details><br/>
+<details class="question"><summary>12. Why choose the result with only 55.41%?</summary><p class="en">My aim is to explore all thirteen differently scaled measurements together. Standardisation prevents their original numerical scales from setting the initial variance weights.</p><p>这不意味着 55.41 本身是一个优点。优点是度量更符合本次目的；只保留 55.41% 是必须说明的二维限制。</p></details><br/>
+<details class="question"><summary>13. Does scaling change only the denominator?</summary><p class="en">It changes the whole covariance structure and therefore generally changes both directions and eigenvalues, as well as total variance.</p><p>R=D⁻¹CD⁻¹ 不是一般的相似变换 D⁻¹CD，因此不保留原特征值。标准化不是把最后百分比换个分母这么简单。</p></details><br/>
+<details class="question"><summary>14. Why is the standardised total variance 13?</summary><p class="en">There are thirteen non-constant variables, each with sample variance one. Their variances, and equivalently the eigenvalues, sum to thirteen.</p><p>前提是使用与 prcomp 一致的样本 SD。若改用分母 n 的缩放而仍以 n−1 算方差，数字会不同。</p></details><br/>
+<details class="question"><summary>15. Why do you use two components?</summary><p class="en">Two components give a readable two-dimensional plot. They are a visualisation choice, not a claim that two is optimal for every task.</p><p>对重建、预测、噪声识别要另设评估目标，不能因为有三种酒就自动要求三个 PC。</p></details><br/>
+<details class="question"><summary>16. Your plot is mirrored compared with mine. Is it wrong?</summary><p class="en">The sign of each principal direction is arbitrary. Reversing a direction and its scores reflects the plot without changing the analysis.</p><p>v→−v，t→−t，所以 tvᵀ 重建不变。</p></details><br/>
+<details class="question"><summary>17. Are the four loadings percentages?</summary><p class="en">They are absolute direction coefficients. They are not explained-variance percentages or classification scores.</p><p>单位特征向量的系数平方之和为 1，但单个系数本身不是方差份额；相关载荷还需要乘 √λ。</p></details><br/>
+<details class="question"><summary>18. Is Proline biologically the most important measurement?</summary><p class="en">The analysis shows that Proline dominates the raw numerical variance. Biological importance would require a scientific question and further evidence.</p><p>数值大小、测量单位、变化范围会决定原方差，不能直接得出机制或因果结论。</p></details><br/>
+<details class="question"><summary>19. Do points close together represent identical wines?</summary><p class="en">They have similar scores on the two displayed directions. They may differ in components omitted from the plot.</p><p>二维投影会压缩或完全丢掉某些差异；应结合余下方差解释距离。</p></details></p>
+<h3>C. 深入追问 / Research-level follow-ups</h3>
+<p><details class="question"><summary>20. Should we always standardise?</summary><p class="en">It depends on the metric we want. Standardising is useful for differently scaled variables, but may amplify low-variance noise. Raw covariance PCA can be appropriate when the original variances are scientifically meaningful.</p><p>同单位也可能需要标准化，不同单位也不自动保证“所有列应同等起步”。预处理是建模选择。</p></details><br/>
+<details class="question"><summary>21. How is SVD related to the covariance eigenvectors?</summary><p class="en">If the preprocessed matrix is USVᵀ, its covariance is VS²Vᵀ divided by n−1. So the right singular vectors give the PCA directions.</p><p>要说明作用在中心化或标准化之后的矩阵上，避免把未处理原矩阵直接代入。</p></details><br/>
+<details class="question"><summary>22. Can we reconstruct the original data?</summary><p class="en">Using every nonzero component, we can reconstruct the preprocessed data up to rounding. With fewer components, we obtain its best rank-k squared-error approximation.</p><p>标准化结果还要乘回 SD、加回均值。最好近似是针对所用尺度，而非所有可能目标。</p></details><br/>
+<details class="question"><summary>23. How would you test whether the visual separation predicts cultivar?</summary><p class="en">I would define a classifier and evaluate it on unseen data. The means, scales and PCA directions would be fitted within the training data, including inside each cross-validation fold.</p><p>不能先用全体数据标准化/PCA 再声称测试完全独立。探索全数据可以，但预测评估有更严格的数据分离要求。</p></details><br/>
+<details class="question"><summary>24. What would you do with missing values or outliers?</summary><p class="en">I would inspect their origin and choose a documented treatment. Ordinary PCA can be sensitive to outliers; imputation or robust methods require their own assumptions.</p><p>Wine 本例无缺失，因此没有偷偷删行。不能因为某点远就自动删掉；它可能是真实结构。</p></details><br/>
+<details class="question"><summary>25. What if two eigenvalues are equal?</summary><p class="en">The individual directions in that eigenspace are not unique. The subspace is the stable object, and different orthonormal bases give the same retained variance.</p><p>只有接近重根时也可能出现方向不稳定，应比较子空间和谱间隔，而不只逐项比较系数。</p></details><br/>
+<details class="question"><summary>26. What is a reasonable next experiment?</summary><p class="en">I would change one variable's unit and compare both PCA fits, then examine more components and per-variable reconstruction quality.</p><p>该实验直接测试“尺度导致结果变化”的机制，比只换配色更能支撑论点。</p></details><br/>
+<details class="question"><summary>27. Does this presentation summarise a specific application paper?</summary><p class="en">It is my real-data R application using the UCI Wine dataset. The interpretation is supported by standard PCA theory; I would cite the dataset and the theoretical sources separately.</p><p>老师邮件允许真实数据的 R 应用路线。不要把这两页冒称为一篇并未选择的论文总结。</p></details><br/>
+<details class="question"><summary>28. How does this connect to principal components regression?</summary><p class="en">PCR uses PCA scores as predictors in a regression. Directions with high predictor variance need not be the directions most useful for predicting the response.</p><p>这是当前汇报的延伸：高解释率不能自动等同于任何任务中的“好”。PCR 要用预测误差选择维数，详见文献教材。</p></details></p>
+</section><section class="chapter" id="practice"><div class="eyebrow">WINE-PCA / 18</div><h1>最后用题目检验：真的能独立讲了吗？<span>Practice problems and a teach-back test</span></h1><h3>练习 1：手算一个完整二维 PCA / A complete small example</h3>
+<p>合成数据为 (−2,−1)、(0,0)、(2,1)。它已经中心化。计算 C、最大特征值、第一单位特征向量、三个 scores 和解释率。</p>
+<p><details><summary>完整解答 / Worked solution</summary><p>C 的两列方差是 4 和 1，协方差是 2，因此 C=[[4,2],[2,1]]。特征多项式 λ²−5λ=0，特征值 5、0。第一方向可取 (2,1)/√5。scores 是 −√5、0、√5，它们的样本方差是 5。PC1 解释 100%，因为三点完全在同一条直线上。把 scores 乘回该方向，可以精确重建三个点。</p><p class="en">The data have rank one. One component is sufficient because there is no variation perpendicular to the line.</p></details></p>
+<h3>练习 2：再标准化 / Now standardise it</h3>
+<p>上题两列 SD 是 2 和 1。写出 Z、相关矩阵、第一方向。比较原坐标里的第一方向。</p>
+<p><details><summary>完整解答 / Worked solution</summary><p>Z 的行是 (−1,−1)、(0,0)、(1,1)。相关矩阵是 [[1,1],[1,1]]，特征值 2、0，方向是 (1,1)/√2。与原始 (2,1)/√5 不同：标准化改变了度量，但此例依旧只有一条线，因此两者 PC1 解释率均为 100%。这也说明“标准化一定降低解释率”是错的。</p></details></p>
+<h3>练习 3：用特征值回答，而不是凭感觉</h3>
+<p>标准化三个变量的特征值是 1.8、0.9、0.3。前两成分保留多少方差？丢掉部分的总平方误差是多少（n=11）？</p>
+<p><details><summary>完整解答 / Worked solution</summary><p>总和 3，与三个单位方差变量一致；比例 (1.8+0.9)/3=90%。丢掉方差为 0.3，总平方重建误差=(11−1)×0.3=3。两个量一个是比例，一个是元素平方误差总和，不要混成同一个数。</p></details></p>
+<h3>练习 4：设计单位变换实验 / Change one unit</h3>
+<p>在自己的脚本中写：复制 X 为 X2，把 Proline 除以 1000；分别运行不标准化和标准化 PCA。先写预测，再运行。比较解释率和绝对载荷。</p>
+<p><details><summary>参考实现与解释 / Reference and explanation</summary><div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>X2 &lt;- X
+X2$Proline &lt;- X2$Proline / 1000
+q0 &lt;- prcomp(X2, center = TRUE, scale. = FALSE)
+q1 &lt;- prcomp(X2, center = TRUE, scale. = TRUE)
+sum(q0$sdev[1:2]^2) / sum(q0$sdev^2)
+sum(q1$sdev[1:2]^2) / sum(q1$sdev^2)
+max(abs(abs(q1$rotation) - abs(p1$rotation)))</code></pre></div><p>原始 PCA 通常改变；标准化后的矩阵相同，解释率应不变，最后误差接近零。本数据特征值无精确重根，因而可这样按列比较绝对载荷。重复特征值时应比较子空间。</p></details></p>
+<h3>练习 5：评估每个变量 / Per-variable quality</h3>
+<p>用前两 PC 重建 p0，分别计算每列残差方差除以原方差，观察即使总体解释率接近 100%，是否仍有变量表示得不好。</p>
+<p><details><summary>参考实现 / Reference</summary><div class="codebox"><div class="codebar"><span>R · 分段运行 / Run one block at a time</span><button class="copy" type="button">复制这一小段 R / Copy R</button></div><pre><code>Xc &lt;- scale(X, center = TRUE, scale = FALSE)
+Xhat &lt;- p0$x[, 1:2] %*% t(p0$rotation[, 1:2])
+residual &lt;- Xc - Xhat
+retained &lt;- 1 - apply(residual, 2, var) / sapply(X, var)
+sort(retained)</code></pre></div><p>每个 retained 是对应变量方差被两轴保留的比例。它与把所有变量的绝对方差加总后得到的总比例不同。原尺度下巨大的 Proline 方差能掩盖其他变量的相对损失。</p></details></p>
+<h3>练习 6：纠正四句话 / Correct the statements</h3>
+<p>“PCA 选出最重要的两个原变量。”“标准化以后每个载荷都一样。”“右图是 55.41% 的准确率。”“PC1 负号说明结果错了。”</p>
+<p><details><summary>参考答案 / Corrections</summary><p>PCA 选新方向，通常混合多个原变量；标准化相等的是输入列方差，载荷由相关结构决定；55.41% 是两个 PC 的累计解释方差；整体方向符号任意。Try saying all four corrections in English without reading the glossary.</p></details></p>
+<h3>研究型延伸 / A small extension with a clear question</h3>
+<p>问题：标准化是不是会放大测量噪声？在合成数据中加一列方差很小的独立噪声，比较缩放前后载荷和重建。说明数据如何生成、噪声如何定义、用了多少次重复。报告观察到什么，避免从一次模拟推断“所有标准化都不可靠”。</p>
+<h3>汇报准备通过标准 / Ready-to-present checklist</h3>
+<div class="checklist"><label><input type="checkbox"/>我能不用稿子解释一个点、一个载荷、一个百分比。</label><label><input type="checkbox"/>我能手算练习 1，并指出各矩阵维度。</label><label><input type="checkbox"/>我能从空白脚本导入数据、运行两种 PCA、画图。</label><label><input type="checkbox"/>我能说明标准化为什么改变整个问题，而不只分母。</label><label><input type="checkbox"/>我能承认原始 PCA 对原尺度重建很好，同时解释自己的选择。</label><label><input type="checkbox"/>我能在三分钟内讲完，并回答随机的五个追问。</label></div>
+</section><section class="chapter" id="sources"><div class="eyebrow">WINE-PCA / 19</div><h1>术语、资料与复习索引<span>Glossary, sources and what was verified</span></h1><div class="table-wrap"><table>
+<thead>
+<tr>
+<th>English</th>
+<th>中文</th>
+<th>最短解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>observation</td>
+<td>观测 / 样本</td>
+<td>一行，一瓶酒</td>
+</tr>
+<tr>
+<td>variable / feature</td>
+<td>变量 / 特征</td>
+<td>一列测量</td>
+</tr>
+<tr>
+<td>centred data</td>
+<td>中心化数据</td>
+<td>每列减均值</td>
+</tr>
+<tr>
+<td>standardisation</td>
+<td>标准化</td>
+<td>本例每列减均值、除样本 SD</td>
+</tr>
+<tr>
+<td>covariance</td>
+<td>协方差</td>
+<td>偏差乘积的平均（样本用 n−1）</td>
+</tr>
+<tr>
+<td>correlation</td>
+<td>相关系数</td>
+<td>无量纲的协方差</td>
+</tr>
+<tr>
+<td>loading / direction coefficient</td>
+<td>载荷 / 方向系数</td>
+<td>本教材是 prcomp 的 rotation</td>
+</tr>
+<tr>
+<td>score</td>
+<td>主成分得分</td>
+<td>样本在新轴上的坐标</td>
+</tr>
+<tr>
+<td>eigenvalue</td>
+<td>特征值</td>
+<td>主成分 score 的方差</td>
+</tr>
+<tr>
+<td>singular value</td>
+<td>奇异值</td>
+<td>σ，满足 λ=σ²/(n−1)</td>
+</tr>
+<tr>
+<td>explained variance ratio</td>
+<td>解释方差比例</td>
+<td>该轴方差 / 当前总方差</td>
+</tr>
+<tr>
+<td>scree plot</td>
+<td>碎石图</td>
+<td>依序画特征值或解释率</td>
+</tr>
+<tr>
+<td>orthogonal</td>
+<td>正交</td>
+<td>方向点积为 0</td>
+</tr>
+<tr>
+<td>reconstruction</td>
+<td>重建</td>
+<td>由保留的 scores 与 directions 算回近似数据</td>
+</tr>
+<tr>
+<td>cultivar</td>
+<td>栽培品种</td>
+<td>本例的 3 个类别</td>
+</tr>
+<tr>
+<td>data leakage</td>
+<td>数据泄漏</td>
+<td>评估时用到了不该提前知道的测试信息</td>
+</tr>
+</tbody>
+</table></div>
+<h3>资料 / Sources</h3>
+<ol>
+<li><a href="https://archive.ics.uci.edu/dataset/109/wine">UCI Machine Learning Repository: Wine</a>，原始文件 wine.data 与 wine.names；178 个观测，13 项化学测量，类别数 3。网站提供数据与来源说明；本教材的数据文件保留原值、无标题行。</li>
+<li><a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html">R stats: prcomp</a>，SVD、center、scale.、sdev、rotation、x 的定义。</li>
+<li><a href="https://stat.ethz.ch/R-manual/R-devel/library/base/html/scale.html">R base: scale</a>，列中心化与缩放的定义。</li>
+<li>Jolliffe, I. T. (2002), <em>Principal Component Analysis</em>, 2nd ed., Springer，基础理论及第 8 章回归；<a href="https://doi.org/10.1007/b98835">出版社页面</a>。</li>
+<li>Bishop, C. M. (2006), <em>Pattern Recognition and Machine Learning</em>, Chapter 12，最大方差、最小重建误差与概率解释；<a href="https://www.microsoft.com/en-us/research/people/cmbishop/prml-book/">作者书籍页面</a>。</li>
+<li>软件操作：<a href="https://cran.r-project.org/bin/windows/base/">CRAN</a>、<a href="https://posit.co/download/rstudio-desktop/">RStudio Desktop</a>、<a href="https://docs.posit.co/ide/user/ide/guide/code/execution.html">Posit 执行代码说明</a>。</li>
+</ol>
+<h3>核对说明 / Verification notes</h3>
+<p>本教材使用当前两页 Wine PPT 的截图和课堂讲稿结构。用户在 R 4.6.2 中运行了两种 PCA，贴出了累计解释率与四个载荷；这些数值另经独立矩阵计算核对。参考得分图按同一数据重绘，为与 PPT 对照统一了轴符号。交互投影例子明确使用合成数据；Wine 交互使用真实 178 行计算结果。</p>
+<p>Windows 操作图来自已有真实 RStudio 教程；图中的旧项目名/旧数据名在说明中明确区分。教材没有把旧企鹅图冒充为 Wine 实验。新扩展练习提供可检查的公式与代码，不把未在本机完整执行的扩展称作实测结果。</p>
+<p class="en">The central Wine results were supplied from a successful R run and checked independently. Extension exercises are labelled as exercises. Source material, observation, interpretation and suggested follow-up are kept distinct.</p>
+<p>这是个人学习资料，不是利兹大学官方教材。用于作业时，请用你理解后的表达，核对本学期具体提交要求。学习下一步：<a href="../reading/">PCA 文献阅读室</a>。</p>
+</section><footer><button id="prev">← 上一节 / Back</button><button id="complete" aria-pressed="false">标记学会 / Mark complete</button><button id="next" class="primary">下一节 / Next →</button></footer><p class="small end">学习版 · 2026-11-19 · 进度只存当前浏览器，不上传。<br>理解 → 实践 → 解释 → 检查 / Understand → practise → explain → check.</p></main></div><dialog id="zoom"><button id="zoom-close">关闭 / Close</button><img id="zoom-img" alt=""><p id="zoom-caption"></p></dialog><script id="wine-data" type="application/json">{"unscaled":{"share":[0.9980912304918977,0.001735915624705751,9.495895755146108e-05,5.0217356182151336e-05,1.2363684687897794e-05,8.462130335248294e-06,2.8068145571365148e-06,1.5230805328475227e-06,1.1278304393008547e-06,7.214158108199797e-07,3.78060266512506e-07,2.1201375460769068e-07,8.253927880930366e-08],"scores":[[318.56297928793686,21.49213073453995],[303.0974196593863,-5.364717683064025],[438.0611329172358,-6.53730944944005],[733.2401393508108,0.19272903207213388],[-11.571428495905781,18.489994608360355],[703.2311917377225,-0.3321586742532857],[542.9715808665928,-13.518966641596888],[548.401859840437,11.449432383558474],[298.03686280061186,-8.180157835408336],[298.0495531354684,-7.101542937561726],[763.0797119412474,-8.334317226298758],[532.9432277319981,-14.287633770471393],[572.8344103911644,-21.005014330071106],[402.92535828609664,-16.102635218597193],[800.0533938569718,-12.118447191589329],[563.2455779988175,2.2148286640862738],[533.3796506359128,10.80480223366249],[383.3175910772752,8.47741981756293],[933.1183874996059,-8.35447843974335],[98.40317747596022,14.392659413302262],[33.59359400185373,25.56795649775253],[23.146437540271062,1.817473086265108],[288.09303021740465,-3.96304174966503],[267.98151253499145,-9.57070401340584],[98.0198857727782,-5.495846062188419],[83.49874396134175,22.891621549959407],[447.9255962223425,-14.797331250759305],[537.9191650213774,-15.388346065023542],[168.21046760464947,4.255310963149653],[288.00824708126464,-8.959731549015746],[538.0264521021905,-8.212738820938176],[768.0929388553868,-7.379897374639945],[243.1507509018916,-0.1439149276148118],[488.60128004523546,23.565325043240644],[348.2310069968195,4.038080148998221],[173.07995742609637,-2.7929216497768676],[133.28642354659138,7.77272957534944],[358.0185591752663,-8.157984118124048],[273.04443152140374,-6.725074307758912],[13.643002113365391,27.846832147749076],[48.42964224993015,16.321949760522184],[287.8840921689911,-14.88511853521718],[348.09534818044665,-5.043426088455586],[-66.81465538610271,4.38482991830957],[138.2270098834421,4.73068835980404],[333.2548058291665,5.319331158248494],[318.11184846663883,-3.486944939116945],[238.1114850787226,-3.051521001293949],[313.11991538783985,-2.3053631635876375],[513.1877480212282,-0.8637592352155203],[402.93901715897346,-15.05330284880669],[517.9289632654715,-14.997554888546455],[443.266411294933,3.2605020440732764],[628.2860709851128,4.041145380795894],[313.3976126756323,12.608913514882225],[373.33329122238,9.664198626315429],[223.4171063579505,14.216892411736984],[523.0728513966159,-7.096625255912912],[538.1820973229432,-1.3567801281016303],[-227.03269045249672,-7.994967969134478],[-66.85012199724913,2.3198665362225745],[-296.82443689141553,5.468475698009891],[-116.97047258185772,-3.726383423155155],[-327.0591255951512,-6.948130808142178],[-391.75248643605005,11.17167825622284],[-68.90576044269503,-0.5586205371241981],[-245.21252397707894,-17.493639299420547],[-237.24141029251675,-17.531025550918],[3.296155990979902,10.095811600653024],[-27.966120730539263,51.63012518592644],[123.13013830856286,1.0598345145506898],[-337.1041224880132,-7.623855122175806],[-275.09602587968766,-7.753152131800833],[238.71675654886118,35.251827368233656],[139.09405663995776,-1.2074761987359925],[-318.8763289023295,2.8107711323253266],[-355.060252514137,-7.530701831829723],[-246.6335974519159,16.558436650558402],[3.7716896555327355,36.03109236303352],[-283.84224764476613,6.361860804858198],[-469.0593503092666,-5.458923979087488],[-33.13133924615621,-13.187104957216402],[-117.2903920098071,-19.578612467991928],[-232.13298838412302,-10.530103259648033],[-226.9532994201187,-1.7760587915564763],[-296.85215173438587,4.452803088679313],[-252.04639192844047,-5.212617588104979],[-185.1088573734927,-8.318582024009315],[-67.18075184447467,-14.524690218444064],[-122.43132640120487,-27.50403869849135],[-267.1853332030439,-14.053890086022559],[-297.10441467528636,-8.415031614551134],[-252.21388507177042,-15.251570245283126],[-457.02221494219674,-3.697337926777129],[-401.85127408999597,5.331400215799387],[191.18339677250668,58.79376237956185],[-121.27917775374175,36.4175148893171],[-319.08827280468586,-9.193078195295868],[-87.08029256129835,-10.22657268912599],[-341.0409001673488,-5.750565586578921],[-36.93161455099817,-2.170415928046041],[-185.0737134940791,-8.520519018587816],[-308.882386612496,3.7516565521730785],[-332.0892963829008,-7.883728753439605],[-75.15313775202637,-13.413827944810857],[-432.0097419228536,-2.0329467337495397],[-237.20669708725694,-15.561967932903476],[-259.14836773379625,-11.078816347723377],[-434.9577801123812,-0.059526029523992524],[-66.99069577012979,-4.57145764041052],[-184.7364385253271,10.516463160565282],[-422.0428736248791,-4.2449219417624935],[-139.81866316131374,5.735552074296895],[-313.0609481628972,-6.16709401104084],[-362.12963311360676,-9.259295397921367],[-340.11500621424557,-8.689734429642703],[-252.10947206109935,-9.275870146862665],[-401.69597348176717,15.425890267706617],[-375.1710923664663,-13.185050253814756],[-183.09792918191027,-9.55354431954878],[-121.94524134844447,-1.5888942780782391],[-281.5345691197327,24.508261186546683],[-381.82677823426366,9.189109755405706],[-367.089380045994,-7.18821589025637],[-367.15717469661234,-11.196320221661306],[-369.10360096662134,-8.175804911790458],[-395.0788364569409,-6.679831873374488],[-281.03036870910114,-2.535860067717696],[-405.06128780288566,-4.451073669629206],[-167.23764181767564,-16.73118572505876],[-116.47300035905567,24.266020059797505],[-216.78453997810755,8.13044955622494],[-186.91511196560182,1.7100573556775942],[-146.76952962486226,8.92033411356218],[-97.1329735979266,-13.058283826880883],[-51.98204686718356,-4.812293096844392],[-27.09793074985345,-10.229996223962065],[-231.95153407062085,0.534907409824018],[-167.07624576452395,-8.75672311103137],[-156.86804454285763,4.16316248805539],[-146.94648958055137,-1.0967289642032627],[32.904292748895706,-11.30536563540766],[-226.92620968566473,1.3882783668810927],[-197.00434749401978,-4.228428695529235],[108.3126773032598,10.351330443795764],[83.11826261248208,0.8068696950290747],[-332.1958399900889,-13.813298892465196],[-122.12609208783442,-11.469925859637073],[-97.01938926807345,-5.906442575323519],[-196.62480660405078,16.873113924850287],[-246.44919923184153,27.810095379533568],[-266.62878804970137,17.150231997529268],[-321.57074093518077,22.164340097201013],[-71.8976587062259,-0.39965639971936223],[-106.81661780127249,5.206123065088734],[-22.020256798528855,-6.229439254840842],[-267.0317323055762,-5.923089144009858],[132.99984125218958,-4.867705439544273],[-86.9139985907805,0.07963577715358952],[-127.06128965116451,-8.29141684119447],[-227.06883575173464,-7.618630299434809],[-66.7554311763774,8.47028989743514],[-176.76509842511703,9.473190002016777],[-71.76839793240192,7.510637841257726],[-132.04824836043468,-7.255030312061557],[-227.07784455326023,-7.59337930388689],[-51.689506459844445,12.358084974597835],[-62.08501112430395,-10.554015295801587],[3.1827646534929133,5.391361501575988],[-116.67481804945261,14.53337034715419],[-236.9212079418378,0.4630369975531723],[-277.0835782560393,-8.740331907970246],[-87.0274026313734,-7.1045957485817395],[-6.980210958028418,-4.541136569158694],[3.131604678755396,2.335190511328358],[88.45807368612962,18.77628455835614],[93.45624185410918,18.6708191234254],[-186.94319027310934,-0.2133308031216755]],"loading":[0.0016592647196420726,-0.0006810155555011521,0.0001949057418915896,-0.004671300581276229,0.017868007506895368,0.0009898296800817925,0.0015672883017930571,-0.00012308666181031305,0.0006006077918217756,0.0023271431925767474,0.00017138003714523402,0.0007049316445910609,0.9998229365233258],"top":"Proline","topAbs":0.9998229365233258},"scaled":{"share":[0.3619884809992636,0.19207490257008927,0.11123630536249982,0.07069030182714026,0.065632936796486,0.049358233192225626,0.042386793226233135,0.026807489483788624,0.022221534047897125,0.01930019093944078,0.017368356899899146,0.012982325756042135,0.007952148898994524],"scores":[[3.3074209742892235,1.4394022531822943],[2.2032498134202316,-0.3324550711941809],[2.509660694761865,1.0282507242941965],[3.746497190498,2.7486183908585384],[1.006070489597704,0.8673840350754064],[3.041673725611274,2.1164309168310798],[2.4422005148251427,1.1715453427353544],[2.053643788593806,1.6044371435937743],[2.5038113458622333,0.9154884741383149],[2.745882382732546,0.7872170290019039],[3.4699483745007806,1.2986698452333534],[1.7498168777295455,0.6102557704023357],[2.107517286793353,0.6738056143108806],[3.448429214077159,1.1274494764095215],[4.300652282433134,2.090079711129263],[2.2987038329874885,1.6578750632565047],[2.1658456828096493,2.3207587540635184],[1.8936294749078233,1.6267799275590011],[3.5320216723838596,2.511259706836826],[2.0786585582209844,1.0581530706706512],[3.115613762383926,0.7846836072979977],[1.0835136063891349,0.24106353999609],[2.5280926337657195,-0.09158227809738288],[1.6403610793700971,-0.5148266657837156],[1.7566206560615267,-0.31625681015008644],[0.987294063457222,0.9380212926164959],[1.7702838696187126,0.6842449613073484],[1.2319487845303747,-0.08955441908422676],[2.18225046758958,0.6876298991801492],[2.249762670593064,0.1909233649705958],[2.4931870441337263,1.2373434374484842],[2.669879637173233,1.467733346351316],[1.6239980127950104,0.05255619584964288],[1.8973386973116375,1.6284667254316365],[1.4064211811087537,0.6959710736769421],[1.8984708735346285,0.1762138728925013],[1.3809666889579095,0.6567871359160179],[1.1190507026115544,0.11378877580647451],[1.4979689099673035,-0.7672676364432766],[2.5226849007999865,1.7979302304986202],[2.580815255523198,0.7774232863343533],[0.6666015906093661,0.16948284982577272],[3.062168978953417,1.1526674200517173],[0.4609089685901865,0.32981177273411505],[2.0954409429340446,-0.07080917675823051],[1.132970204485771,1.7721084874548818],[2.7189311848365754,1.1879835328800186],[2.813403001722135,0.6444407091857328],[2.004197250821423,1.2435216352751532],[2.6998752798847554,1.7470392190832222],[3.2058740884352397,0.1665222556837131],[2.8509177296985158,0.7431823756341747],[3.4957432833483932,1.608197324246597],[2.2185331645329214,1.869893254938051],[2.140948464698493,1.013891471507612],[2.4623833955406367,1.3252698832421697],[2.7338061749101135,1.4325078506595057],[2.1676263071058455,1.2087899891028417],[3.130549247832411,1.7267082790131443],[-0.9259699188279086,-3.064840615364413],[-1.5381412259602416,-1.3775575833553633],[-1.831084493703259,-0.8276494232885898],[0.030520738742892534,-1.2592339961221486],[2.044494334245676,-1.9196175936288749],[-0.6079658284858465,-1.9026915404301756],[0.8976955472246871,-0.7617626325775941],[2.2421822635270043,-1.8792912293663457],[0.18286817748656115,-2.42031868594756],[-0.8105186514379238,-0.21989369316463123],[1.9700631868086675,-1.3993358666453521],[-1.5677936617244428,-0.8824937279348979],[1.6530188409215651,-0.9540210185768419],[-0.7233319553350359,-1.0606534245943184],[2.5550197688136387,0.2594666264180438],[1.8274126580937835,-1.2842554672020587],[-0.8655512868166572,-2.4372260631414093],[0.3689735740914804,-2.1478481530980797],[-1.453277523297422,-1.3794604765040275],[1.2593782945905752,-0.768681172566501],[0.3750922815908681,-1.0241543866529277],[0.7599202601891507,-3.3655599689064863],[1.0316677561479934,-1.4466289714029386],[-0.49348469453825133,-2.374545219470899],[-2.5318350811618306,-0.08719738394203853],[0.8329704356893152,-1.4695251970529892],[0.7856882825683625,-2.02092573332855],[-0.8045625814106533,-2.2275467486049436],[-0.5564728816117385,-2.36631035112901],[-1.111974295784705,-1.7971775692693086],[-0.5541596121435082,-2.6500645211873697],[-1.3454898170279435,-2.112043647941097],[-1.5600818020493452,-1.8470043440133348],[-1.9271194378074683,-1.5551086818038713],[0.7445656116900079,-2.3064255593163066],[0.9547620944352169,-2.217273771265579],[2.5367094311096214,0.1687978642677483],[-0.5424224800102084,-0.3678887757600093],[1.0281494640510296,-2.5583525430204386],[2.245574924586749,-1.4287111575172768],[1.406249155115504,-2.160098390859862],[0.7954758507157252,-2.3702625766073138],[-0.5479859240749325,-2.2866781982784765],[-0.16072036706745746,-1.1612076939134757],[-0.6579389747400369,-2.6724226023191364],[0.3912507367774351,-2.0928280917015387],[-1.7675131353743962,-1.712457831201062],[-0.3652370673860707,-2.1632510261127913],[-1.6161137098247185,-1.3517702063849697],[0.0823036148660666,-2.2997472764788833],[1.573835469814473,-1.457921668020783],[1.4165732645275302,-1.414217300230003],[-0.2779187781052641,-1.9251375066366223],[-1.2994792910085755,-0.7610255518421373],[-0.45578614759048375,-2.263031866089839],[-0.49279572939035693,-1.9335906222276453],[0.48071836092713727,-3.8608927330254605],[-0.2521775151254505,-2.8135556715681447],[-0.10692601227161842,-1.9234960907704244],[-2.4261686716860016,-1.253604771771947],[-0.5495393545590198,-2.2159107323440748],[0.7375414126927732,-1.40499334962045],[1.332562733754182,0.2526243082906232],[-1.1737759151563532,-0.6620991375369075],[-0.4610344850270413,-0.6165489687838204],[0.9757216854954238,-1.4415041884527866],[-0.0965374058712815,-2.1040626846318817],[0.03837888372064619,-1.263198776897541],[-1.592665782037003,-1.204745132588675],[-0.4782159263051251,-1.9333868080701557],[-1.7877903309086502,-1.1470524071619166],[-1.3233685920485898,0.16990993649464953],[-2.3777933648185714,0.3735289252221495],[-2.928678650894626,0.263119601227971],[-2.140772271969246,0.36721907092617595],[-2.3632031755821865,-0.45834188174946183],[-3.0552231506105345,0.3524187045567105],[-3.9047389833163133,0.1541476873020365],[-3.925390335332963,0.6578315694429249],[-3.085572088937039,0.3478614837454869],[-2.3677923696898495,0.2911590268625021],[-2.7709962993840622,0.2859981065220389],[-2.280129313390215,0.3714600005710803],[-2.9772350643781773,0.48784176523178513],[-2.3685134059532094,0.4809769389812373],[-2.203649295207036,1.1567893401571785],[-2.6182352769686155,0.5615766239019614],[-4.268597576898804,0.6478434752726802],[-3.5725635985298307,1.2691227067712134],[-2.7991676039614406,1.5661159617298293],[-2.891502750528534,2.0353156266412142],[-2.314208870856333,2.3497377471645433],[-2.5426584127723615,2.039529821982603],[-1.8074427057272529,1.5233487620986792],[-2.7523805065944558,2.1329156483887077],[-2.7294510465953326,0.4087332833069775],[-3.594728569985811,1.7973142097414387],[-2.8816970750128124,1.919803078877476],[-3.3826141280409785,1.3081861522225795],[-1.0452334187291992,3.5052019369175076],[-1.6053836879899703,2.3998684185700894],[-3.134289511910973,0.7360846376879309],[-2.2338554579181764,1.1721587688033712],[-2.8396634261413993,0.5544798447367434],[-2.5901904400463365,0.6960021984672023],[-2.9410031559321657,1.550933965563098],[-3.520102479403686,0.8800442967824462],[-2.3993422836378606,2.585064019457663],[-2.9208453724545422,1.2708619986146892],[-2.1752765844382607,2.0716933143428586],[-2.37423036799742,2.5813856530643218],[-3.2025831121520842,-0.2505423544899013],[-3.6675729375511703,0.8453631760105323],[-2.4586203249541314,2.187627269478394],[-3.361043046083408,2.210054840198066],[-2.594636692277981,1.7522863612972372],[-2.6703068454902885,2.753132874006807],[-2.380302543263282,2.290884369640683],[-3.199732103661902,2.7611307473383158]],"loading":[0.1443293954060112,-0.24518758025722076,-0.0020510614443710884,-0.23932040548753475,0.14199204195298726,0.3946608450666303,0.4229342967100592,-0.2985331029547153,0.3134294883076888,-0.08861670472472291,0.29671456358638126,0.37616741073871285,0.2867522268968052],"top":"Flavanoids","topAbs":0.4229342967100592},"classes":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"names":["Alcohol","Malic acid","Ash","Alcalinity of ash","Magnesium","Total phenols","Flavanoids","Nonflavanoid phenols","Proanthocyanins","Color intensity","Hue","OD280/OD315","Proline"],"rawVarianceShareProline":0.9977383616822384}</script><script src="assets/site.js"></script></body></html>

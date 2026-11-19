@@ -1,0 +1,7 @@
+# 短总结 5：Kernel Principal Component Analysis / Summary 5: Schölkopf, Smola & Müller, Kernel PCA
+
+**书目信息：**Bernhard Schölkopf, Alexander Smola and Klaus-Robert Müller (1997), “Kernel Principal Component Analysis”, *Artificial Neural Networks—ICANN ’97*, LNCS 1327, pp.583–588。用户提供的是这篇 6 页会议论文，不是同作者 1998 年更长的 “Nonlinear Component Analysis as a Kernel Eigenvalue Problem”。
+
+**短总结（中文）：**论文把 PCA 推广到通过非线性映射得到的特征空间。关键是把算法写成样本之间内积的形式，再用核函数直接计算这些内积，从而不必显式构造可能极高维的特征。算法对中心化核矩阵求特征向量，按特征空间单位长度要求归一化，并通过与训练样本的核值计算新样本坐标。论文用合成例子和 USPS 手写数字说明非线性特征的作用。优势依赖核与任务；计算仍需处理样本数平方级的核矩阵，而且特征空间中的重建通常难以直接映回输入空间。
+
+**Brief summary (English):** The paper extends PCA to a nonlinear feature space by expressing the required computations through inner products and replacing them with kernel evaluations. Principal coordinates can be obtained from a centred Gram matrix without explicitly constructing the feature map. Toy examples and USPS digit experiments illustrate the usefulness of nonlinear features. The approach still depends on the kernel choice and sample-size costs, while reconstruction in the original input space is generally difficult. Its optimality concerns variance in the chosen feature space, not every downstream task.

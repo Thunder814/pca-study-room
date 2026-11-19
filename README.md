@@ -1,12 +1,24 @@
-# PCA bilingual study materials
+# PCA Study Room
 
-Static learning site for PCA theory and R practice. Personal study material, not an official University of Leeds website.
+Personal bilingual study materials, not an official University of Leeds website.
 
-- `lesson3/`: preserved bilingual R and PCA tutorial, screenshots, exercises and penguin data.
-- `theory/`: preserved PCA / SVD theory tutorial.
+## Read online
 
-All lesson graphics and interactive scripts are embedded in the HTML files. The site needs no local server to remain online once GitHub Pages is enabled.
+- Old PCA / R tutorial: https://thunder814.github.io/pca-study-room/lesson3/
+- Wine PCA and presentation: https://thunder814.github.io/pca-study-room/wine-pca/
+- Literature reading guide: https://thunder814.github.io/pca-study-room/reading/
+- Earlier theory book: https://thunder814.github.io/pca-study-room/theory/
 
-Publish the repository root from branch `main` using GitHub Pages. Keep this repository public on GitHub Free. Do not add private recordings, student identifiers, passwords or machine logs.
+## Hosting
 
-The Pages address remains available while the repository and Pages service remain enabled. This replaces an expired temporary Cloudflare Tunnel URL.
+GitHub Pages publishes the root of the `main` branch. The `.nojekyll` file permits ordinary static HTML. No local server, tunnel, account for readers, backend or API keys are needed. Keep the repository and Pages enabled. Do not rename the repository or account if you want existing links to remain valid.
+
+## Content and sources
+
+The old 24-section R tutorial is preserved. The Wine book has 19 sections and the reading guide has 15. Each new book includes a PDF, an offline ZIP and original teaching text. Source citations appear in the books. Complete copyrighted papers, books, private recordings and credentials are not distributed.
+
+Wine data are from UCI Wine: https://archive.ics.uci.edu/dataset/109/wine (original values; the provided CSV has no header). Penguin data attribution is included in the old tutorial. Embedded RStudio screenshots are historical, with the differing example filenames explicitly labelled. New plot figures are computed from the stated data or labelled synthetic teaching examples.
+
+## Updating
+
+Edit the relevant static files, commit to `main`, and wait for the Pages build. Keep links and data filenames consistent. Reader progress and notes use local browser storage only.
